@@ -1,0 +1,6173 @@
+Help me create the below project from scratch in a zero to expert level from ideas, prototypes to everything:
+
+Description :To identify and implement the Capstone project as the title given below by meeting all the necessary requirements.
+
+Task Title: Bulk email toolAny specifications on the design? * *
+*Front-end: Reactjs * Back-end: Nodejs  Database: MongoDB
+Requirements: * The project should achieve the CODE QUALITY * Use fonts/icons if it’s required in the design. * The use of various charts is required in the design. * The use of bootstrap/ material CSS is required in the design
+
+Explain everything side by side in a detailed manner
+
+
+
+
+
+
+
+
+
+
+
+# Building a Bulk Email Tool: From Zero to Expert
+
+I'll guide you through creating a comprehensive bulk email tool from scratch, explaining each step in detail along the way. This guide will take you from initial concept to a fully functional application that meets all your project requirements.
+
+## Part 1: Understanding the Project & Planning
+
+### 1.1 Project Overview
+
+A bulk email tool allows users to create, manage, and send emails to multiple recipients simultaneously. It's commonly used by businesses for marketing campaigns, newsletters, and important announcements.
+
+**Core functionality needed:**
+- User authentication system
+- Email campaign creation and management
+- Recipient list management
+- Email composition with templates
+- Campaign scheduling
+- Email tracking and analytics (opens, clicks)
+- Dashboard with visualizations
+
+### 1.2 Technical Requirements Analysis
+
+Let's analyze the technical requirements in detail:
+
+**Frontend:** React.js
+- Component-based UI architecture
+- State management for dynamic content
+- Routing for multiple pages
+- Form handling for user inputs
+- Integration with visualization libraries for charts
+
+**Backend:** Node.js
+- RESTful API endpoints
+- Authentication middleware
+- Database operations
+- Email sending functionality
+- Analytics tracking
+
+**Database:** MongoDB
+- Document-based data structure
+- Collections for users, campaigns, templates, and analytics
+- Efficient querying for dashboard statistics
+
+**Additional Requirements:**
+- Code quality (clean, maintainable, and well-documented)
+- Responsive design using Bootstrap or Material UI
+- Charts and visualizations for analytics
+- Icons and fonts for enhanced UI
+
+### 1.3 System Architecture Design
+
+Let's design the overall system architecture:
+
+**Frontend Architecture:**
+```
+bulk-email-tool-frontend/
+├── public/               # Static files
+├── src/
+│   ├── components/       # Reusable UI components
+│   │   ├── auth/         # Authentication components
+│   │   ├── campaigns/    # Campaign management components
+│   │   ├── templates/    # Email template components
+│   │   ├── recipients/   # Recipient management components
+│   │   ├── dashboard/    # Dashboard and analytics components
+│   │   └── common/       # Common UI elements
+│   ├── pages/            # Main application pages
+│   ├── services/         # API integration services
+│   ├── contexts/         # React contexts for state management
+│   ├── hooks/            # Custom React hooks
+│   ├── utils/            # Utility functions
+│   ├── assets/           # Images, icons, etc.
+│   ├── styles/           # Global styles
+│   ├── App.js            # Main application component
+│   └── index.js          # Entry point
+└── package.json          # Dependencies and scripts
+```
+
+**Backend Architecture:**
+```
+bulk-email-tool-backend/
+├── config/               # Configuration files
+│   ├── db.js             # Database connection
+│   └── auth.js           # Authentication configuration
+├── controllers/          # Request handlers
+│   ├── authController.js
+│   ├── campaignController.js
+│   ├── templateController.js
+│   ├── recipientController.js
+│   └── analyticsController.js
+├── models/               # Database models
+│   ├── User.js
+│   ├── Campaign.js
+│   ├── Template.js
+│   ├── RecipientList.js
+│   └── Analytics.js
+├── routes/               # API routes
+│   ├── auth.js
+│   ├── campaigns.js
+│   ├── templates.js
+│   ├── recipients.js
+│   └── analytics.js
+├── middleware/           # Custom middleware
+│   ├── auth.js           # Authentication middleware
+│   └── errorHandler.js   # Error handling middleware
+├── services/             # Business logic services
+│   ├── emailService.js   # Email sending service
+│   └── trackingService.js # Analytics tracking service
+├── utils/                # Helper functions
+├── app.js                # Express application setup
+├── server.js             # Server entry point
+└── package.json          # Dependencies and scripts
+```
+
+### 1.4 Database Schema Design
+
+Let's design the MongoDB schemas for our application:
+
+**User Schema:**
+```javascript
+{
+  _id: ObjectId,
+  name: String,
+  email: String,
+  password: String (hashed),
+  role: String (admin/user),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+**Campaign Schema:**
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId (ref: User),
+  name: String,
+  subject: String,
+  body: String (HTML content),
+  fromName: String,
+  fromEmail: String,
+  status: String (draft/scheduled/sending/sent/failed),
+  scheduledAt: Date,
+  sentAt: Date,
+  templateId: ObjectId (ref: Template),
+  recipientListIds: [ObjectId] (ref: RecipientList),
+  statistics: {
+    sent: Number,
+    delivered: Number,
+    opened: Number,
+    clicked: Number,
+    bounced: Number
+  },
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+**Template Schema:**
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId (ref: User),
+  name: String,
+  subject: String,
+  body: String (HTML content),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+**RecipientList Schema:**
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId (ref: User),
+  name: String,
+  description: String,
+  recipients: [
+    {
+      email: String,
+      name: String,
+      customFields: Object (additional data)
+    }
+  ],
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+**Analytics Schema:**
+```javascript
+{
+  _id: ObjectId,
+  campaignId: ObjectId (ref: Campaign),
+  recipientEmail: String,
+  event: String (delivered/opened/clicked/bounced),
+  timestamp: Date,
+  metadata: Object (additional data like IP, user-agent)
+}
+```
+
+### 1.5 UI/UX Design Planning
+
+Let's outline the key user interfaces we'll need to build:
+
+1. **Authentication Pages**
+   - Login page
+   - Registration page
+   - Forgot password page
+
+2. **Dashboard**
+   - Summary statistics
+   - Recent campaigns
+   - Email performance charts
+   - Activity timeline
+
+3. **Campaign Management**
+   - Campaign list view
+   - Campaign creation/editor
+   - Campaign details/results page
+
+4. **Template Management**
+   - Template list view
+   - Template editor with preview
+   - Template selection interface
+
+5. **Recipient Management**
+   - List management
+   - Recipient import interface
+   - Segmentation tools
+
+6. **Settings**
+   - User profile settings
+   - Email sending settings
+   - API integration settings
+
+## Part 2: Setting Up the Development Environment
+
+### 2.1 Frontend Setup
+
+Let's set up the React.js frontend project:
+
+```bash
+# Create a new React app
+npx create-react-app bulk-email-tool-frontend
+
+# Navigate to the project directory
+cd bulk-email-tool-frontend
+
+# Install essential dependencies
+npm install react-router-dom axios bootstrap react-bootstrap
+npm install chart.js react-chartjs-2 recharts
+npm install @fortawesome/fontawesome-svg-core
+npm install @fortawesome/free-solid-svg-icons
+npm install @fortawesome/react-fontawesome
+npm install formik yup react-quill
+npm install moment jwt-decode
+```
+
+Next, let's configure our project structure:
+
+```bash
+# Create necessary directories
+mkdir -p src/components/{auth,campaigns,templates,recipients,dashboard,common}
+mkdir -p src/pages
+mkdir -p src/services
+mkdir -p src/contexts
+mkdir -p src/hooks
+mkdir -p src/utils
+mkdir -p src/assets
+mkdir -p src/styles
+```
+
+### 2.2 Backend Setup
+
+Now, let's set up the Node.js backend project:
+
+```bash
+# Create a new directory for the backend
+mkdir bulk-email-tool-backend
+cd bulk-email-tool-backend
+
+# Initialize a new Node.js project
+npm init -y
+
+# Install essential dependencies
+npm install express mongoose bcryptjs jsonwebtoken
+npm install cors dotenv helmet morgan
+npm install nodemailer multer
+npm install express-validator
+npm install cookie-parser
+
+# Install development dependencies
+npm install --save-dev nodemon
+```
+
+Let's update the package.json to include useful scripts:
+
+```json
+"scripts": {
+  "start": "node server.js",
+  "dev": "nodemon server.js",
+  "test": "jest"
+}
+```
+
+### 2.3 Database Setup
+
+Let's set up our MongoDB database:
+
+1. **Local Development Setup:**
+   - Install MongoDB locally or use Docker
+   - Create a database named "bulk-email-tool"
+
+2. **Cloud Setup (MongoDB Atlas):**
+   - Sign up for MongoDB Atlas (free tier available)
+   - Create a new cluster
+   - Set up database user credentials
+   - Whitelist your IP address
+   - Get your connection string
+
+Create a `.env` file in the backend folder:
+
+```
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+
+# MongoDB Configuration
+MONGO_URI=mongodb://localhost:27017/bulk-email-tool
+# Or for MongoDB Atlas:
+# MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/bulk-email-tool
+
+# JWT Configuration
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRE=30d
+
+# Email Service Configuration
+EMAIL_SERVICE=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+EMAIL_FROM=Your Name <your-email@gmail.com>
+```
+
+## Part 3: Building the Backend
+
+### 3.1 Setting Up the Server
+
+Let's create the Express server in `server.js`:
+
+```javascript
+const express = require('express');
+const cors = require('cors');
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
+const errorHandler = require('./middleware/errorHandler');
+
+// Load environment variables
+dotenv.config();
+
+// Initialize Express app
+const app = express();
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// Middleware
+app.use(cors());
+app.use(helmet());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(morgan('dev'));
+
+// API Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/campaigns', require('./routes/campaigns'));
+app.use('/api/templates', require('./routes/templates'));
+app.use('/api/recipients', require('./routes/recipients'));
+app.use('/api/analytics', require('./routes/analytics'));
+
+// Health check route
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+// Error handling middleware
+app.use(errorHandler);
+
+// Start the server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+});
+```
+
+### 3.2 Creating Database Models
+
+Let's implement our MongoDB models:
+
+**User Model (models/User.js):**
+
+```javascript
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+const UserSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Please provide a name'],
+    trim: true
+  },
+  email: {
+    type: String,
+    required: [true, 'Please provide an email'],
+    unique: true,
+    match: [
+      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+      'Please provide a valid email'
+    ]
+  },
+  password: {
+    type: String,
+    required: [true, 'Please provide a password'],
+    minlength: [6, 'Password must be at least 6 characters'],
+    select: false
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+}, {
+  timestamps: true
+});
+
+// Encrypt password using bcrypt
+UserSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) {
+    next();
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+// Sign JWT and return
+UserSchema.methods.getSignedJwtToken = function() {
+  return jwt.sign(
+    { id: this._id },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRE }
+  );
+};
+
+// Match user entered password to hashed password in database
+UserSchema.methods.matchPassword = async function(enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+module.exports = mongoose.model('User', UserSchema);
+```
+
+**Campaign Model (models/Campaign.js):**
+
+```javascript
+const mongoose = require('mongoose');
+
+const CampaignSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  name: {
+    type: String,
+    required: [true, 'Please provide a campaign name'],
+    trim: true
+  },
+  subject: {
+    type: String,
+    required: [true, 'Please provide an email subject'],
+    trim: true
+  },
+  body: {
+    type: String,
+    required: [true, 'Please provide email content']
+  },
+  fromName: {
+    type: String,
+    required: [true, 'Please provide a sender name'],
+    trim: true
+  },
+  fromEmail: {
+    type: String,
+    required: [true, 'Please provide a sender email'],
+    match: [
+      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+      'Please provide a valid email'
+    ]
+  },
+  status: {
+    type: String,
+    enum: ['draft', 'scheduled', 'sending', 'sent', 'failed'],
+    default: 'draft'
+  },
+  scheduledAt: {
+    type: Date
+  },
+  sentAt: {
+    type: Date
+  },
+  templateId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Template'
+  },
+  recipientListIds: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'RecipientList'
+  }],
+  statistics: {
+    sent: {
+      type: Number,
+      default: 0
+    },
+    delivered: {
+      type: Number,
+      default: 0
+    },
+    opened: {
+      type: Number,
+      default: 0
+    },
+    clicked: {
+      type: Number,
+      default: 0
+    },
+    bounced: {
+      type: Number,
+      default: 0
+    }
+  }
+}, {
+  timestamps: true
+});
+
+module.exports = mongoose.model('Campaign', CampaignSchema);
+```
+
+Let's also create similar models for Template, RecipientList, and Analytics. I'll show the Template model as an example:
+
+**Template Model (models/Template.js):**
+
+```javascript
+const mongoose = require('mongoose');
+
+const TemplateSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  name: {
+    type: String,
+    required: [true, 'Please provide a template name'],
+    trim: true
+  },
+  subject: {
+    type: String,
+    required: [true, 'Please provide an email subject'],
+    trim: true
+  },
+  body: {
+    type: String,
+    required: [true, 'Please provide email content']
+  }
+}, {
+  timestamps: true
+});
+
+module.exports = mongoose.model('Template', TemplateSchema);
+```
+
+### 3.3 Creating Authentication Middleware
+
+Let's create the authentication middleware:
+
+```javascript
+// middleware/auth.js
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+
+// Protect routes
+exports.protect = async (req, res, next) => {
+  let token;
+
+  // Get token from Authorization header
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  // If no token is found
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'Not authorized to access this resource'
+    });
+  }
+
+  try {
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Get user from the token
+    req.user = await User.findById(decoded.id);
+
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: 'Not authorized to access this resource'
+    });
+  }
+};
+
+// Grant access to specific roles
+exports.authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `User role ${req.user.role} is not authorized to access this resource`
+      });
+    }
+    next();
+  };
+};
+```
+
+### 3.4 Implementing API Routes and Controllers
+
+Let's implement the authentication routes and controller:
+
+**Auth Controller (controllers/authController.js):**
+
+```javascript
+const User = require('../models/User');
+const { validationResult } = require('express-validator');
+
+// @desc    Register a user
+// @route   POST /api/auth/register
+// @access  Public
+exports.register = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { name, email, password } = req.body;
+
+    // Check if user already exists
+    let user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).json({
+        success: false,
+        message: 'User already exists'
+      });
+    }
+
+    // Create user
+    user = await User.create({
+      name,
+      email,
+      password
+    });
+
+    // Generate JWT
+    const token = user.getSignedJwtToken();
+
+    res.status(201).json({
+      success: true,
+      token
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server Error'
+    });
+  }
+};
+
+// @desc    Login user
+// @route   POST /api/auth/login
+// @access  Public
+exports.login = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+
+    // Check if user exists
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
+
+    // Check if password matches
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
+
+    // Generate JWT
+    const token = user.getSignedJwtToken();
+
+    res.status(200).json({
+      success: true,
+      token
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server Error'
+    });
+  }
+};
+
+// @desc    Get current logged in user
+// @route   GET /api/auth/me
+// @access  Private
+exports.getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server Error'
+    });
+  }
+};
+```
+
+**Auth Routes (routes/auth.js):**
+
+```javascript
+const express = require('express');
+const { check } = require('express-validator');
+const { register, login, getMe } = require('../controllers/authController');
+const { protect } = require('../middleware/auth');
+
+const router = express.Router();
+
+router.post('/register', [
+  check('name', 'Name is required').not().isEmpty(),
+  check('email', 'Please include a valid email').isEmail(),
+  check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
+], register);
+
+router.post('/login', [
+  check('email', 'Please include a valid email').isEmail(),
+  check('password', 'Password is required').exists()
+], login);
+
+router.get('/me', protect, getMe);
+
+module.exports = router;
+```
+
+Let's implement a controller for campaigns as well:
+
+**Campaign Controller (controllers/campaignController.js):**
+
+```javascript
+const Campaign = require('../models/Campaign');
+const RecipientList = require('../models/RecipientList');
+const { validationResult } = require('express-validator');
+const emailService = require('../services/emailService');
+
+// @desc    Get all campaigns for the current user
+// @route   GET /api/campaigns
+// @access  Private
+exports.getCampaigns = async (req, res) => {
+  try {
+    const campaigns = await Campaign.find({ userId: req.user.id })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: campaigns.length,
+      data: campaigns
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server Error'
+    });
+  }
+};
+
+// @desc    Get a single campaign
+// @route   GET /api/campaigns/:id
+// @access  Private
+exports.getCampaign = async (req, res) => {
+  try {
+    const campaign = await Campaign.findById(req.params.id)
+      .populate('templateId')
+      .populate('recipientListIds');
+
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: 'Campaign not found'
+      });
+    }
+
+    // Make sure user owns the campaign
+    if (campaign.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized to access this campaign'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: campaign
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server Error'
+    });
+  }
+};
+
+// @desc    Create a new campaign
+// @route   POST /api/campaigns
+// @access  Private
+exports.createCampaign = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    // Add user ID to campaign
+    req.body.userId = req.user.id;
+
+    const campaign = await Campaign.create(req.body);
+
+    res.status(201).json({
+      success: true,
+      data: campaign
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server Error'
+    });
+  }
+};
+
+// @desc    Update a campaign
+// @route   PUT /api/campaigns/:id
+// @access  Private
+exports.updateCampaign = async (req, res) => {
+  try {
+    let campaign = await Campaign.findById(req.params.id);
+
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: 'Campaign not found'
+      });
+    }
+
+    // Make sure user owns the campaign
+    if (campaign.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized to update this campaign'
+      });
+    }
+
+    // Don't allow updates to campaigns that are not in draft state
+    if (campaign.status !== 'draft') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot update a campaign that is not in draft status'
+      });
+    }
+
+    campaign = await Campaign.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
+
+    res.status(200).json({
+      success: true,
+      data: campaign
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server Error'
+    });
+  }
+};
+
+// @desc    Delete a campaign
+// @route   DELETE /api/campaigns/:id
+// @access  Private
+exports.deleteCampaign = async (req, res) => {
+  try {
+    const campaign = await Campaign.findById(req.params.id);
+
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: 'Campaign not found'
+      });
+    }
+
+    // Make sure user owns the campaign
+    if (campaign.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized to delete this campaign'
+      });
+    }
+
+    // Don't allow deletion of campaigns that are not in draft state
+    if (campaign.status !== 'draft') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot delete a campaign that is not in draft status'
+      });
+    }
+
+    await campaign.remove();
+
+    res.status(200).json({
+      success: true,
+      data: {}
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server Error'
+    });
+  }
+};
+
+// @desc    Send a campaign
+// @route   POST /api/campaigns/:id/send
+// @access  Private
+exports.sendCampaign = async (req, res) => {
+  try {
+    const campaign = await Campaign.findById(req.params.id)
+      .populate('recipientListIds');
+
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: 'Campaign not found'
+      });
+    }
+
+    // Make sure user owns the campaign
+    if (campaign.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized to send this campaign'
+      });
+    }
+
+    // Check if campaign is in draft state
+    if (campaign.status !== 'draft') {
+      return res.status(400).json({
+        success: false,
+        message: 'Campaign is not in draft status'
+      });
+    }
+
+    // Update campaign status to sending
+    campaign.status = 'sending';
+    await campaign.save();
+
+    // Process sending in the background
+    emailService.sendCampaign(campaign)
+      .then(async (result) => {
+        campaign.status = 'sent';
+        campaign.sentAt = new Date();
+        campaign.statistics.sent = result.sent;
+        campaign.statistics.delivered = result.delivered;
+        await campaign.save();
+      })
+      .catch(async (error) => {
+        console.error('Campaign sending error:', error);
+        campaign.status = 'failed';
+        await campaign.save();
+      });
+
+    res.status(200).json({
+      success: true,
+      message: 'Campaign is being sent',
+      data: campaign
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server Error'
+    });
+  }
+};
+```
+
+**Campaign Routes (routes/campaigns.js):**
+
+```javascript
+const express = require('express');
+const { check } = require('express-validator');
+const { 
+  getCampaigns, 
+  getCampaign,
+  createCampaign,
+  updateCampaign,
+  deleteCampaign,
+  sendCampaign
+} = require('../controllers/campaignController');
+const { protect } = require('../middleware/auth');
+
+const router = express.Router();
+
+router.use(protect); // All campaign routes require authentication
+
+router.route('/')
+  .get(getCampaigns)
+  .post([
+    check('name', 'Name is required').not().isEmpty(),
+    check('subject', 'Subject is required').not().isEmpty(),
+    check('body', 'Body content is required').not().isEmpty(),
+    check('fromName', 'Sender name is required').not().isEmpty(),
+    check('fromEmail', 'Valid sender email is required').isEmail()
+  ], createCampaign);
+
+router.route('/:id')
+  .get(getCampaign)
+  .put(updateCampaign)
+  .delete(deleteCampaign);
+
+router.post('/:id/send', sendCampaign);
+
+module.exports = router;
+```
+
+### 3.5 Creating Email Service
+
+Now, let's implement the email service for sending campaigns:
+
+**Email Service (services/emailService.js):**
+
+```javascript
+const nodemailer = require('nodemailer');
+const Analytics = require('../models/Analytics');
+
+// Create a transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_SERVICE,
+  port: process.env.EMAIL_PORT,
+  secure: process.env.EMAIL_PORT === '465',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+// Generate tracking pixel HTML
+const generateTrackingPixel = (campaignId, recipientEmail) => {
+  const trackingUrl = `${process.env.BACKEND_URL}/api/analytics/open?campaignId=${campaignId}&email=${encodeURIComponent(recipientEmail)}`;
+  return `<img src="${trackingUrl}" alt="" width="1" height="1" style="display:none" />`;
+};
+
+// Add tracking to links
+const addLinkTracking = (html, campaignId, recipientEmail) => {
+  // Replace all links with tracking links
+  return html.replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"([^>]*)>/gi, (match, url, rest) => {
+    const trackingUrl = `${process.env.BACKEND_URL}/api/analytics/click?campaignId=${campaignId}&email=${encodeURIComponent(recipientEmail)}&url=${encodeURIComponent(url)}`;
+    return `<a href="${trackingUrl}"${rest}>`;
+  });
+};
+
+// Send an email
+const sendEmail = async (options) => {
+  try {
+    const mailOptions = {
+## Part 3: Building the Backend (Continued)
+
+### 3.5 Creating Email Service (Continued)
+
+Let's complete the email service implementation:
+
+```javascript
+// services/emailService.js (continued)
+  try {
+    const mailOptions = {
+      from: options.from || process.env.EMAIL_FROM,
+      to: options.to,
+      subject: options.subject,
+      html: options.html
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('Email sending error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Send a campaign to all recipients
+const sendCampaign = async (campaign) => {
+  try {
+    let sent = 0;
+    let delivered = 0;
+    const failed = [];
+
+    // Get all unique recipients from all recipient lists
+    const recipients = new Map();
+    
+    for (const list of campaign.recipientListIds) {
+      for (const recipient of list.recipients) {
+        if (!recipients.has(recipient.email)) {
+          recipients.set(recipient.email, recipient);
+        }
+      }
+    }
+
+    // Send emails to each recipient
+    for (const [email, recipient] of recipients) {
+      sent++;
+      
+      // Personalize email content
+      let personalizedBody = campaign.body;
+      
+      // Replace placeholders with recipient data
+      personalizedBody = personalizedBody
+        .replace(/{{name}}/g, recipient.name || '')
+        .replace(/{{email}}/g, recipient.email);
+        
+      // Add tracking pixel and link tracking
+      personalizedBody += generateTrackingPixel(campaign._id, recipient.email);
+      personalizedBody = addLinkTracking(personalizedBody, campaign._id, recipient.email);
+      
+      // Send the email
+      const result = await sendEmail({
+        from: `${campaign.fromName} <${campaign.fromEmail}>`,
+        to: recipient.email,
+        subject: campaign.subject,
+        html: personalizedBody
+      });
+      
+      if (result.success) {
+        delivered++;
+        
+        // Record delivery event in analytics
+        await Analytics.create({
+          campaignId: campaign._id,
+          recipientEmail: recipient.email,
+          event: 'delivered',
+          timestamp: new Date()
+        });
+      } else {
+        failed.push({ email: recipient.email, error: result.error });
+      }
+      
+      // Add a small delay to avoid hitting rate limits
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    return {
+      sent,
+      delivered,
+      failed: failed.length,
+      failedDetails: failed
+    };
+  } catch (error) {
+    console.error('Campaign sending error:', error);
+    throw error;
+  }
+};
+
+module.exports = {
+  sendEmail,
+  sendCampaign
+};
+```
+
+### 3.6 Implementing Tracking Service
+
+Now, let's create the analytics tracking service:
+
+```javascript
+// services/trackingService.js
+const Analytics = require('../models/Analytics');
+const Campaign = require('../models/Campaign');
+
+// Track email open event
+const trackOpen = async (campaignId, email) => {
+  try {
+    // Check if this open has already been tracked
+    const existingOpen = await Analytics.findOne({
+      campaignId,
+      recipientEmail: email,
+      event: 'opened'
+    });
+
+    if (!existingOpen) {
+      // Create a new open event record
+      await Analytics.create({
+        campaignId,
+        recipientEmail: email,
+        event: 'opened',
+        timestamp: new Date()
+      });
+
+      // Update campaign statistics
+      await Campaign.findByIdAndUpdate(campaignId, {
+        $inc: { 'statistics.opened': 1 }
+      });
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error tracking open:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Track link click event
+const trackClick = async (campaignId, email, url) => {
+  try {
+    // Create a new click event record
+    await Analytics.create({
+      campaignId,
+      recipientEmail: email,
+      event: 'clicked',
+      timestamp: new Date(),
+      metadata: { url }
+    });
+
+    // Check if this is the first click from this recipient
+    const existingClicks = await Analytics.find({
+      campaignId,
+      recipientEmail: email,
+      event: 'clicked'
+    });
+
+    if (existingClicks.length === 1) {
+      // Update campaign statistics only for the first click
+      await Campaign.findByIdAndUpdate(campaignId, {
+        $inc: { 'statistics.clicked': 1 }
+      });
+    }
+
+    return { success: true, redirectUrl: url };
+  } catch (error) {
+    console.error('Error tracking click:', error);
+    return { success: false, error: error.message, redirectUrl: url };
+  }
+};
+
+module.exports = {
+  trackOpen,
+  trackClick
+};
+```
+
+### 3.7 Implementing Analytics Controller and Routes
+
+Let's implement the analytics controller and routes:
+
+```javascript
+// controllers/analyticsController.js
+const { trackOpen, trackClick } = require('../services/trackingService');
+const Analytics = require('../models/Analytics');
+const Campaign = require('../models/Campaign');
+
+// @desc    Track email open
+// @route   GET /api/analytics/open
+// @access  Public
+exports.trackOpenEvent = async (req, res) => {
+  try {
+    const { campaignId, email } = req.query;
+    
+    if (!campaignId || !email) {
+      return res.status(400).end();
+    }
+    
+    // Process tracking in the background
+    trackOpen(campaignId, email).catch(err => 
+      console.error('Background open tracking error:', err)
+    );
+    
+    // Return a 1x1 transparent GIF
+    const transparentGif = Buffer.from(
+      'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 
+      'base64'
+    );
+    
+    res.setHeader('Content-Type', 'image/gif');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.end(transparentGif);
+  } catch (error) {
+    console.error('Open tracking error:', error);
+    res.status(500).end();
+  }
+};
+
+// @desc    Track link click
+// @route   GET /api/analytics/click
+// @access  Public
+exports.trackClickEvent = async (req, res) => {
+  try {
+    const { campaignId, email, url } = req.query;
+    
+    if (!campaignId || !email || !url) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required parameters'
+      });
+    }
+    
+    const result = await trackClick(campaignId, email, url);
+    
+    // Redirect to the original URL
+    res.redirect(result.redirectUrl);
+  } catch (error) {
+    console.error('Click tracking error:', error);
+    // Still redirect even if there's an error
+    res.redirect(req.query.url || '/');
+  }
+};
+
+// @desc    Get campaign analytics
+// @route   GET /api/analytics/campaigns/:id
+// @access  Private
+exports.getCampaignAnalytics = async (req, res) => {
+  try {
+    const campaign = await Campaign.findById(req.params.id);
+    
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: 'Campaign not found'
+      });
+    }
+    
+    // Make sure user owns the campaign
+    if (campaign.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized to access this campaign'
+      });
+    }
+    
+    // Get all analytics events for this campaign
+    const events = await Analytics.find({ campaignId: req.params.id });
+    
+    // Calculate opens over time
+    const opensOverTime = {};
+    const clicksOverTime = {};
+    
+    events.forEach(event => {
+      const date = new Date(event.timestamp);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      if (event.event === 'opened') {
+        opensOverTime[dateStr] = (opensOverTime[dateStr] || 0) + 1;
+      } else if (event.event === 'clicked') {
+        clicksOverTime[dateStr] = (clicksOverTime[dateStr] || 0) + 1;
+      }
+    });
+    
+    // Get unique opens and clicks by email
+    const uniqueOpens = new Set();
+    const uniqueClicks = new Set();
+    
+    events.forEach(event => {
+      if (event.event === 'opened') {
+        uniqueOpens.add(event.recipientEmail);
+      } else if (event.event === 'clicked') {
+        uniqueClicks.add(event.recipientEmail);
+      }
+    });
+    
+    // Get most clicked links
+    const clicksByUrl = {};
+    events.forEach(event => {
+      if (event.event === 'clicked' && event.metadata && event.metadata.url) {
+        clicksByUrl[event.metadata.url] = (clicksByUrl[event.metadata.url] || 0) + 1;
+      }
+    });
+    
+    const mostClickedLinks = Object.entries(clicksByUrl)
+      .map(([url, count]) => ({ url, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        campaign: {
+          id: campaign._id,
+          name: campaign.name,
+          subject: campaign.subject,
+          status: campaign.status,
+          sentAt: campaign.sentAt,
+          statistics: campaign.statistics
+        },
+        uniqueOpens: uniqueOpens.size,
+        uniqueClicks: uniqueClicks.size,
+        opensOverTime,
+        clicksOverTime,
+        mostClickedLinks
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server Error'
+    });
+  }
+};
+
+// @desc    Get overall analytics dashboard data
+// @route   GET /api/analytics/dashboard
+// @access  Private
+exports.getDashboardData = async (req, res) => {
+  try {
+    // Get all user's campaigns
+    const campaigns = await Campaign.find({ userId: req.user.id });
+    
+    // Calculate overall statistics
+    const totalCampaigns = campaigns.length;
+    const totalSent = campaigns.reduce((sum, campaign) => sum + campaign.statistics.sent, 0);
+    const totalOpened = campaigns.reduce((sum, campaign) => sum + campaign.statistics.opened, 0);
+    const totalClicked = campaigns.reduce((sum, campaign) => sum + campaign.statistics.clicked, 0);
+    
+    // Calculate open and click rates
+    const openRate = totalSent > 0 ? (totalOpened / totalSent) * 100 : 0;
+    const clickRate = totalOpened > 0 ? (totalClicked / totalOpened) * 100 : 0;
+    
+    // Get recent campaigns
+    const recentCampaigns = await Campaign.find({ userId: req.user.id })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('name subject statistics status sentAt createdAt');
+    
+    // Calculate campaign performance over time
+    const campaignsOverTime = {};
+    campaigns.forEach(campaign => {
+      if (campaign.sentAt) {
+        const month = new Date(campaign.sentAt).toISOString().substring(0, 7); // YYYY-MM format
+        
+        if (!campaignsOverTime[month]) {
+          campaignsOverTime[month] = {
+            sent: 0,
+            opened: 0,
+            clicked: 0
+          };
+        }
+        
+        campaignsOverTime[month].sent += campaign.statistics.sent;
+        campaignsOverTime[month].opened += campaign.statistics.opened;
+        campaignsOverTime[month].clicked += campaign.statistics.clicked;
+      }
+    });
+    
+    // Format for chart
+    const performanceOverTime = Object.entries(campaignsOverTime)
+      .map(([month, stats]) => ({
+        month,
+        sent: stats.sent,
+        opened: stats.opened,
+        clicked: stats.clicked,
+        openRate: stats.sent > 0 ? (stats.opened / stats.sent) * 100 : 0,
+        clickRate: stats.opened > 0 ? (stats.clicked / stats.opened) * 100 : 0
+      }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        totalCampaigns,
+        totalSent,
+        totalOpened,
+        totalClicked,
+        openRate,
+        clickRate,
+        recentCampaigns,
+        performanceOverTime
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server Error'
+    });
+  }
+};
+```
+
+```javascript
+// routes/analytics.js
+const express = require('express');
+const { 
+  trackOpenEvent, 
+  trackClickEvent,
+  getCampaignAnalytics,
+  getDashboardData
+} = require('../controllers/analyticsController');
+const { protect } = require('../middleware/auth');
+
+const router = express.Router();
+
+// Public tracking routes
+router.get('/open', trackOpenEvent);
+router.get('/click', trackClickEvent);
+
+// Private analytics routes
+router.get('/campaigns/:id', protect, getCampaignAnalytics);
+router.get('/dashboard', protect, getDashboardData);
+
+module.exports = router;
+```
+
+## Part 4: Building the Frontend
+
+### 4.1 Setting Up Core Files
+
+Let's start by configuring the main application files:
+
+**React Router Setup (src/App.js):**
+
+```jsx
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './styles/App.css';
+
+// Auth Components
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+
+// Layout Components
+import Dashboard from './pages/Dashboard';
+import MainLayout from './components/common/MainLayout';
+
+// Campaign Components
+import Campaigns from './pages/Campaigns';
+import CampaignCreate from './pages/CampaignCreate';
+import CampaignEdit from './pages/CampaignEdit';
+import CampaignDetails from './pages/CampaignDetails';
+
+// Template Components
+import Templates from './pages/Templates';
+import TemplateCreate from './pages/TemplateCreate';
+import TemplateEdit from './pages/TemplateEdit';
+
+// Recipient Components
+import Recipients from './pages/Recipients';
+import RecipientListCreate from './pages/RecipientListCreate';
+import RecipientListEdit from './pages/RecipientListEdit';
+
+// Auth Context
+import { AuthProvider } from './contexts/AuthContext';
+import PrivateRoute from './components/auth/PrivateRoute';
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <ToastContainer />
+        <Routes>
+          {/* Auth Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          
+          {/* Protected Routes */}
+          <Route path="/" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
+            <Route index element={<Dashboard />} />
+            
+            <Route path="campaigns">
+              <Route index element={<Campaigns />} />
+              <Route path="create" element={<CampaignCreate />} />
+              <Route path="edit/:id" element={<CampaignEdit />} />
+              <Route path=":id" element={<CampaignDetails />} />
+            </Route>
+            
+            <Route path="templates">
+              <Route index element={<Templates />} />
+              <Route path="create" element={<TemplateCreate />} />
+              <Route path="edit/:id" element={<TemplateEdit />} />
+            </Route>
+            
+            <Route path="recipients">
+              <Route index element={<Recipients />} />
+              <Route path="create" element={<RecipientListCreate />} />
+              <Route path="edit/:id" element={<RecipientListEdit />} />
+            </Route>
+          </Route>
+          
+          {/* Redirect unmatched routes to dashboard */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
+  );
+}
+
+export default App;
+```
+
+**Authentication Context (src/contexts/AuthContext.js):**
+
+```jsx
+import React, { createContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import jwt_decode from 'jwt-decode';
+import axios from 'axios';
+
+export const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+      try {
+        // Check if token is expired
+        const decodedToken = jwt_decode(token);
+        const currentTime = Date.now() / 1000;
+        
+        if (decodedToken.exp < currentTime) {
+          // Token is expired
+          localStorage.removeItem('token');
+          setCurrentUser(null);
+        } else {
+          // Set axios default header
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          
+          // Fetch user data
+          fetchUser();
+        }
+      } catch (error) {
+        console.error('Token decoding error:', error);
+        localStorage.removeItem('token');
+        setCurrentUser(null);
+      }
+    }
+    
+    setLoading(false);
+  }, []);
+
+  const fetchUser = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/me`);
+      setCurrentUser(response.data.data);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      logout();
+      setError('Failed to authenticate user');
+    }
+  };
+
+  const login = async (email, password) => {
+    try {
+      setLoading(true);
+      
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, {
+        email,
+        password
+      });
+      
+      const { token } = response.data;
+      
+      // Save token and set axios default header
+      localStorage.setItem('token', token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Fetch user data
+      await fetchUser();
+      
+      setLoading(false);
+      navigate('/');
+      
+      return { success: true };
+    } catch (error) {
+      setLoading(false);
+      
+      const errorMessage = error.response?.data?.message || 'Login failed';
+      setError(errorMessage);
+      
+      return { success: false, message: errorMessage };
+    }
+  };
+
+  const register = async (name, email, password) => {
+    try {
+      setLoading(true);
+      
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/register`, {
+        name,
+        email,
+        password
+      });
+      
+      const { token } = response.data;
+      
+      // Save token and set axios default header
+      localStorage.setItem('token', token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Fetch user data
+      await fetchUser();
+      
+      setLoading(false);
+      navigate('/');
+      
+      return { success: true };
+    } catch (error) {
+      setLoading(false);
+      
+      const errorMessage = error.response?.data?.message || 'Registration failed';
+      setError(errorMessage);
+      
+      return { success: false, message: errorMessage };
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
+    setCurrentUser(null);
+    navigate('/login');
+  };
+
+  const clearError = () => {
+    setError(null);
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        currentUser,
+        loading,
+        error,
+        login,
+        register,
+        logout,
+        clearError
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+```
+
+**Private Route Component (src/components/auth/PrivateRoute.js):**
+
+```jsx
+import React, { useContext } from 'react';
+import { Navigate } from 'react-router-dom';
+import { AuthContext } from '../../contexts/AuthContext';
+import LoadingSpinner from '../common/LoadingSpinner';
+
+const PrivateRoute = ({ children }) => {
+  const { currentUser, loading } = useContext(AuthContext);
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  return currentUser ? children : <Navigate to="/login" />;
+};
+
+export default PrivateRoute;
+```
+
+**Main Layout Component (src/components/common/MainLayout.js):**
+
+```jsx
+import React from 'react';
+import { Outlet } from 'react-router-dom';
+import Sidebar from './Sidebar';
+import Header from './Header';
+
+const MainLayout = () => {
+  return (
+    <div className="main-layout">
+      <Sidebar />
+      <div className="main-content">
+        <Header />
+        <div className="content-container">
+          <Outlet />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MainLayout;
+```
+
+### 4.2 Creating Authentication Pages
+
+Let's create the login and registration pages:
+
+**Login Page (src/pages/Login.js):**
+
+```jsx
+import React, { useState, useContext, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+import { AuthContext } from '../contexts/AuthContext';
+import { Container, Row, Col, Card, Button, Alert } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons';
+
+const Login = () => {
+  const { login, currentUser, error, clearError } = useContext(AuthContext);
+  const [loginError, setLoginError] = useState('');
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/');
+    }
+  }, [currentUser, navigate]);
+
+  // Form validation schema
+  const validationSchema = Yup.object({
+    email: Yup.string()
+      .email('Invalid email address')
+      .required('Email is required'),
+    password: Yup.string()
+      .required('Password is required')
+  });
+
+  // Handle form submission
+  const handleSubmit = async (values, { setSubmitting }) => {
+    clearError();
+    setLoginError('');
+    
+    const result = await login(values.email, values.password);
+    
+    if (!result.success) {
+      setLoginError(result.message);
+    }
+    
+    setSubmitting(false);
+  };
+
+  return (
+    <Container>
+      <Row className="justify-content-center align-items-center min-vh-100">
+        <Col md={6} lg={5}>
+          <Card className="shadow-sm">
+            <Card.Body className="p-5">
+              <div className="text-center mb-4">
+                <h2 className="fw-bold">Welcome Back</h2>
+                <p className="text-muted">Sign in to your account</p>
+              </div>
+              
+              {(error || loginError) && (
+                <Alert variant="danger">
+                  {error || loginError}
+                </Alert>
+              )}
+              
+              <Formik
+                initialValues={{ email: '', password: '' }}
+                validationSchema={validationSchema}
+                onSubmit={handleSubmit}
+              >
+                {({ isSubmitting }) => (
+                  <Form>
+                    <div className="mb-3">
+                      <div className="form-floating mb-2">
+                        <Field
+                          type="email"
+                          name="email"
+                          id="email"
+                          className="form-control"
+                          placeholder="Email address"
+                        />
+                        <label htmlFor="email">
+                          <FontAwesomeIcon icon={faEnvelope} className="me-2" />
+                          Email address
+                        </label>
+                      </div>
+                      <ErrorMessage
+                        name="email"
+                        component="div"
+                        className="text-danger"
+                      />
+                    </div>
+                    
+                    <div className="mb-4">
+                      <div className="form-floating mb-2">
+                        <Field
+                          type="password"
+                          name="password"
+                          id="password"
+                          className="form-control"
+                          placeholder="Password"
+                        />
+                        <label htmlFor="password">
+                          <FontAwesomeIcon icon={faLock} className="me-2" />
+                          Password
+                        </label>
+                      </div>
+                      <ErrorMessage
+                        name="password"
+                        component="div"
+                        className="text-danger"
+                      />
+                      <div className="text-end">
+                        <Link to="/forgot-password" className="text-decoration-none">
+                          Forgot password?
+                        </Link>
+                      </div>
+                    </div>
+                    
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="lg"
+                      className="w-100"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? 'Signing in...' : 'Sign In'}
+                    </Button>
+                    
+                    <div className="mt-4 text-center">
+                      <p className="mb-0">
+                        Don't have an account?{' '}
+                        <Link to="/register" className="text-decoration-none">
+                          Sign up
+                        </Link>
+                      </p>
+                    </div>
+                  </Form>
+                )}
+              </Formik>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
+  );
+};
+
+export default Login;
+```
+
+**Register Page (src/pages/Register.js):**
+
+```jsx
+import React, { useState, useContext, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+import { AuthContext } from '../contexts/AuthContext';
+import { Container, Row, Col, Card, Button, Alert } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser, faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons';
+
+const Register = () => {
+  const { register, currentUser, error, clearError } = useContext(AuthContext);
+  const [registerError, setRegisterError] = useState('');
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/');
+    }
+  }, [currentUser, navigate]);
+
+  // Form validation schema
+  const validationSchema = Yup.object({
+    name: Yup.string()
+      .required('Name is required'),
+    email: Yup.string()
+      .email('Invalid email address')
+      .required('Email is required'),
+    password: Yup.string()
+      .required('Password is required')
+      .min(6, 'Password must be at least 6 characters'),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref('password'), null], 'Passwords must match')
+      .required('Confirm password is required')
+  });
+
+  // Handle form submission
+  const handleSubmit = async (values, { setSubmitting }) => {
+    clearError();
+    setRegisterError('');
+    
+    const result = await register(values.name, values.email, values.password);
+    
+    if (!result.success) {
+      setRegisterError(result.message);
+    }
+    
+    setSubmitting(false);
+  };
+
+  return (
+    <Container>
+      <Row className="justify-content-center align-items-center min-vh-100">
+        <Col md={6} lg={5}>
+          <Card className="shadow-sm">
+            <Card.Body className="p-5">
+              <div className="text-center mb-4">
+                <h2 className="fw-bold">Create Account</h2>
+                <p className="text-muted">Sign up to get started</p>
+              </div>
+              
+              {(error || registerError) && (
+                <Alert variant="danger">
+                  {error || registerError}
+                </Alert>
+              )}
+              
+              <Formik
+                initialValues={{ name: '', email: '', password: '', confirmPassword: '' }}
+                validationSchema={validationSchema}
+                onSubmit={handleSubmit}
+              >
+                {({ isSubmitting }) => (
+                  <Form>
+                    <div className="mb-3">
+                      <div className="form-floating mb-2">
+                        <Field
+                          type="text"
+                          name="name"
+                          id="name"
+                          className="form-control"
+                          placeholder="Full name"
+                        />
+                        <label htmlFor="name">
+                          <FontAwesomeIcon icon={faUser} className="me-2" />
+                          Full name
+                        </label>
+                      </div>
+                      <ErrorMessage
+                        name="name"
+                        component="div"
+                        className="text-danger"
+                      />
+                    </div>
+                    
+                    <div className="mb-3">
+                      <div className="form-floating mb-2">
+                        <Field
+                          type="email"
+                          name="email"
+                          id="email"
+                          className="form-control"
+                          placeholder="Email address"
+                        />
+                        <label htmlFor="email">
+                          <FontAwesomeIcon icon={faEnvelope} className="me-2" />
+                          Email address
+                        </label>
+                      </div>
+                      <ErrorMessage
+                        name="email"
+                        component="div"
+                        className="text-danger"
+                      />
+                    </div>
+                    
+                    <div className="mb-3">
+                      <div className="form-floating mb-2">
+                        <Field
+                          type="password"
+                          name="password"
+                          id="## Part 4: Building the Frontend (Continued)
+
+### 4.2 Creating Authentication Pages (Continued)
+
+Let's complete the Register component:
+
+```jsx
+// Rest of the Register.js component continued...
+                        <Field
+                          type="password"
+                          name="password"
+                          id="password"
+                          className="form-control"
+                          placeholder="Password"
+                        />
+                        <label htmlFor="password">
+                          <FontAwesomeIcon icon={faLock} className="me-2" />
+                          Password
+                        </label>
+                      </div>
+                      <ErrorMessage
+                        name="password"
+                        component="div"
+                        className="text-danger"
+                      />
+                    </div>
+                    
+                    <div className="mb-4">
+                      <div className="form-floating mb-2">
+                        <Field
+                          type="password"
+                          name="confirmPassword"
+                          id="confirmPassword"
+                          className="form-control"
+                          placeholder="Confirm password"
+                        />
+                        <label htmlFor="confirmPassword">
+                          <FontAwesomeIcon icon={faLock} className="me-2" />
+                          Confirm password
+                        </label>
+                      </div>
+                      <ErrorMessage
+                        name="confirmPassword"
+                        component="div"
+                        className="text-danger"
+                      />
+                    </div>
+                    
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="lg"
+                      className="w-100"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? 'Creating account...' : 'Create Account'}
+                    </Button>
+                    
+                    <div className="mt-4 text-center">
+                      <p className="mb-0">
+                        Already have an account?{' '}
+                        <Link to="/login" className="text-decoration-none">
+                          Sign in
+                        </Link>
+                      </p>
+                    </div>
+                  </Form>
+                )}
+              </Formik>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
+  );
+};
+
+export default Register;
+```
+
+### 4.3 Creating Navigation Components
+
+Let's create the sidebar and header components for the main layout:
+
+```jsx
+// src/components/common/Sidebar.js
+import React, { useContext } from 'react';
+import { NavLink } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faTachometerAlt, 
+  faEnvelopeOpenText, 
+  faFileAlt, 
+  faUserFriends,
+  faSignOutAlt,
+  faCog
+} from '@fortawesome/free-solid-svg-icons';
+import { AuthContext } from '../../contexts/AuthContext';
+import '../../styles/Sidebar.css';
+
+const Sidebar = () => {
+  const { logout } = useContext(AuthContext);
+
+  return (
+    <div className="sidebar">
+      <div className="sidebar-header">
+        <h3>Bulk Email Tool</h3>
+      </div>
+      <div className="sidebar-menu">
+        <ul>
+          <li>
+            <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>
+              <FontAwesomeIcon icon={faTachometerAlt} className="me-2" />
+              Dashboard
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/campaigns" className={({ isActive }) => isActive ? 'active' : ''}>
+              <FontAwesomeIcon icon={faEnvelopeOpenText} className="me-2" />
+              Campaigns
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/templates" className={({ isActive }) => isActive ? 'active' : ''}>
+              <FontAwesomeIcon icon={faFileAlt} className="me-2" />
+              Templates
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/recipients" className={({ isActive }) => isActive ? 'active' : ''}>
+              <FontAwesomeIcon icon={faUserFriends} className="me-2" />
+              Recipients
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/settings" className={({ isActive }) => isActive ? 'active' : ''}>
+              <FontAwesomeIcon icon={faCog} className="me-2" />
+              Settings
+            </NavLink>
+          </li>
+        </ul>
+      </div>
+      <div className="sidebar-footer">
+        <button className="logout-btn" onClick={logout}>
+          <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
+          Logout
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Sidebar;
+```
+
+```jsx
+// src/components/common/Header.js
+import React, { useContext } from 'react';
+import { Navbar, Container, Nav, Dropdown } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser, faEnvelope, faBell, faCog, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
+import { AuthContext } from '../../contexts/AuthContext';
+import '../../styles/Header.css';
+
+const Header = () => {
+  const { currentUser, logout } = useContext(AuthContext);
+
+  return (
+    <Navbar bg="white" className="header">
+      <Container fluid>
+        <Navbar.Toggle aria-controls="navbarScroll" />
+        <Navbar.Collapse id="navbarScroll" className="justify-content-end">
+          <Nav>
+            <Nav.Link href="#" className="notification-icon">
+              <FontAwesomeIcon icon={faEnvelope} />
+              <span className="badge">3</span>
+            </Nav.Link>
+            <Nav.Link href="#" className="notification-icon">
+              <FontAwesomeIcon icon={faBell} />
+              <span className="badge">5</span>
+            </Nav.Link>
+            <Dropdown align="end">
+              <Dropdown.Toggle id="dropdown-user" className="user-dropdown">
+                <span className="avatar">
+                  {currentUser?.name?.charAt(0) || <FontAwesomeIcon icon={faUser} />}
+                </span>
+                <span className="d-none d-md-inline-block ms-2">
+                  {currentUser?.name || 'User'}
+                </span>
+              </Dropdown.Toggle>
+
+              <Dropdown.Menu>
+                <Dropdown.Item href="#/profile">
+                  <FontAwesomeIcon icon={faUser} className="me-2" />
+                  Profile
+                </Dropdown.Item>
+                <Dropdown.Item href="#/settings">
+                  <FontAwesomeIcon icon={faCog} className="me-2" />
+                  Settings
+                </Dropdown.Item>
+                <Dropdown.Divider />
+                <Dropdown.Item onClick={logout}>
+                  <FontAwesomeIcon icon={faSignOutAlt} className="me-2" />
+                  Logout
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
+  );
+};
+
+export default Header;
+```
+
+### 4.4 Creating the Dashboard with Charts
+
+Now, let's create the dashboard page with analytics charts:
+
+```jsx
+// src/pages/Dashboard.js
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Card } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faEnvelope, 
+  faEye, 
+  faMousePointer, 
+  faChartLine,
+  faPaperPlane,
+  faPlus
+} from '@fortawesome/free-solid-svg-icons';
+import { 
+  LineChart, 
+  Line, 
+  BarChart, 
+  Bar, 
+  PieChart, 
+  Pie, 
+  AreaChart, 
+  Area,
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer,
+  Cell
+} from 'recharts';
+import axios from 'axios';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import '../styles/Dashboard.css';
+
+const Dashboard = () => {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState({
+    totalCampaigns: 0,
+    totalSent: 0,
+    totalOpened: 0,
+    totalClicked: 0,
+    openRate: 0,
+    clickRate: 0,
+    recentCampaigns: [],
+    performanceOverTime: []
+  });
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/analytics/dashboard`);
+        setData(response.data.data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // Colors for charts
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
+  // Pie chart data for email status
+  const emailStatusData = [
+    { name: 'Delivered', value: data.totalSent - data.totalOpened },
+    { name: 'Opened', value: data.totalOpened - data.totalClicked },
+    { name: 'Clicked', value: data.totalClicked }
+  ];
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  return (
+    <Container fluid className="dashboard-container">
+      <div className="dashboard-header">
+        <h1>Dashboard</h1>
+        <Link to="/campaigns/create" className="btn btn-primary">
+          <FontAwesomeIcon icon={faPlus} className="me-2" />
+          New Campaign
+        </Link>
+      </div>
+      
+      {/* Statistics Cards */}
+      <Row className="stats-cards">
+        <Col md={3}>
+          <Card className="stats-card">
+            <Card.Body>
+              <div className="stats-icon bg-primary">
+                <FontAwesomeIcon icon={faEnvelope} />
+              </div>
+              <div className="stats-details">
+                <h3>{data.totalCampaigns}</h3>
+                <p>Total Campaigns</p>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
+          <Card className="stats-card">
+            <Card.Body>
+              <div className="stats-icon bg-success">
+                <FontAwesomeIcon icon={faPaperPlane} />
+              </div>
+              <div className="stats-details">
+                <h3>{data.totalSent}</h3>
+                <p>Emails Sent</p>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
+          <Card className="stats-card">
+            <Card.Body>
+              <div className="stats-icon bg-info">
+                <FontAwesomeIcon icon={faEye} />
+              </div>
+              <div className="stats-details">
+                <h3>{data.openRate.toFixed(2)}%</h3>
+                <p>Open Rate</p>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
+          <Card className="stats-card">
+            <Card.Body>
+              <div className="stats-icon bg-warning">
+                <FontAwesomeIcon icon={faMousePointer} />
+              </div>
+              <div className="stats-details">
+                <h3>{data.clickRate.toFixed(2)}%</h3>
+                <p>Click Rate</p>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+      
+      {/* Charts */}
+      <Row className="dashboard-charts">
+        <Col lg={8}>
+          <Card className="chart-card">
+            <Card.Header>
+              <h5>
+                <FontAwesomeIcon icon={faChartLine} className="me-2" />
+                Campaign Performance Over Time
+              </h5>
+            </Card.Header>
+            <Card.Body>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart
+                  data={data.performanceOverTime}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Area type="monotone" dataKey="sent" fill="#8884d8" stroke="#8884d8" name="Sent" />
+                  <Area type="monotone" dataKey="opened" fill="#82ca9d" stroke="#82ca9d" name="Opened" />
+                  <Area type="monotone" dataKey="clicked" fill="#ffc658" stroke="#ffc658" name="Clicked" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col lg={4}>
+          <Card className="chart-card">
+            <Card.Header>
+              <h5>Email Engagement</h5>
+            </Card.Header>
+            <Card.Body>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={emailStatusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                  >
+                    {emailStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+      
+      <Row className="dashboard-charts">
+        <Col lg={6}>
+          <Card className="chart-card">
+            <Card.Header>
+              <h5>Open vs. Click Rates</h5>
+            </Card.Header>
+            <Card.Body>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={data.performanceOverTime.slice(-6)} // Last 6 months
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis unit="%" />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="openRate" name="Open Rate" fill="#8884d8" />
+                  <Bar dataKey="clickRate" name="Click Rate" fill="#82ca9d" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col lg={6}>
+          <Card className="chart-card">
+            <Card.Header>
+              <h5>Recent Campaigns</h5>
+            </Card.Header>
+            <Card.Body>
+              <div className="recent-campaigns-list">
+                {data.recentCampaigns.length > 0 ? (
+                  data.recentCampaigns.map(campaign => (
+                    <div key={campaign._id} className="campaign-item">
+                      <div className="campaign-info">
+                        <h6>
+                          <Link to={`/campaigns/${campaign._id}`}>
+                            {campaign.name}
+                          </Link>
+                        </h6>
+                        <p className="text-muted">{campaign.subject}</p>
+                      </div>
+                      <div className="campaign-stats">
+                        <div className="stat-item">
+                          <small>Sent</small>
+                          <span>{campaign.statistics.sent}</span>
+                        </div>
+                        <div className="stat-item">
+                          <small>Opened</small>
+                          <span>{campaign.statistics.opened}</span>
+                        </div>
+                        <div className="stat-item">
+                          <small>Clicked</small>
+                          <span>{campaign.statistics.clicked}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center text-muted">No campaigns yet</p>
+                )}
+              </div>
+              {data.recentCampaigns.length > 0 && (
+                <div className="text-center mt-3">
+                  <Link to="/campaigns" className="btn btn-outline-primary btn-sm">
+                    View All Campaigns
+                  </Link>
+                </div>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
+  );
+};
+
+export default Dashboard;
+```
+
+### 4.5 Creating Campaign Management Components
+
+Let's create the campaign list and creation components:
+
+```jsx
+// src/pages/Campaigns.js
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Container, Row, Col, Table, Badge, Button, Card } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faPlus, 
+  faEye, 
+  faEdit, 
+  faTrash, 
+  faPaperPlane,
+  faSearch
+} from '@fortawesome/free-solid-svg-icons';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import '../styles/Campaigns.css';
+
+const Campaigns = () => {
+  const [campaigns, setCampaigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, []);
+
+  const fetchCampaigns = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/campaigns`);
+      setCampaigns(response.data.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching campaigns:', error);
+      toast.error('Failed to load campaigns');
+      setLoading(false);
+    }
+  };
+
+  const deleteCampaign = async (id) => {
+    if (window.confirm('Are you sure you want to delete this campaign?')) {
+      try {
+        await axios.delete(`${process.env.REACT_APP_API_URL}/api/campaigns/${id}`);
+        toast.success('Campaign deleted successfully');
+        // Remove from state
+        setCampaigns(campaigns.filter(campaign => campaign._id !== id));
+      } catch (error) {
+        console.error('Error deleting campaign:', error);
+        toast.error('Failed to delete campaign');
+      }
+    }
+  };
+
+  const sendCampaign = async (id) => {
+    if (window.confirm('Are you sure you want to send this campaign now?')) {
+      try {
+        await axios.post(`${process.env.REACT_APP_API_URL}/api/campaigns/${id}/send`);
+        toast.success('Campaign is being sent');
+        // Refresh the list
+        fetchCampaigns();
+      } catch (error) {
+        console.error('Error sending campaign:', error);
+        toast.error('Failed to send campaign');
+      }
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    let variant;
+    switch (status) {
+      case 'draft':
+        variant = 'secondary';
+        break;
+      case 'scheduled':
+        variant = 'info';
+        break;
+      case 'sending':
+        variant = 'warning';
+        break;
+      case 'sent':
+        variant = 'success';
+        break;
+      case 'failed':
+        variant = 'danger';
+        break;
+      default:
+        variant = 'light';
+    }
+    return <Badge bg={variant}>{status}</Badge>;
+  };
+
+  // Filter campaigns based on search term
+  const filteredCampaigns = campaigns.filter(campaign => 
+    campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    campaign.subject.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  return (
+    <Container fluid className="campaigns-container">
+      <div className="campaigns-header">
+        <h1>Campaigns</h1>
+        <Link to="/campaigns/create" className="btn btn-primary">
+          <FontAwesomeIcon icon={faPlus} className="me-2" />
+          Create Campaign
+        </Link>
+      </div>
+      
+      <Card className="mb-4">
+        <Card.Body>
+          <Row>
+            <Col md={6}>
+              <div className="search-box">
+                <FontAwesomeIcon icon={faSearch} className="search-icon" />
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search campaigns..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
+      
+      {filteredCampaigns.length === 0 ? (
+        <Card className="text-center py-5">
+          <Card.Body>
+            <h4 className="text-muted">No campaigns found</h4>
+            <p>Create your first campaign to get started</p>
+            <Link to="/campaigns/create" className="btn btn-primary">
+              <FontAwesomeIcon icon={faPlus} className="me-2" />
+              Create Campaign
+            </Link>
+          </Card.Body>
+        </Card>
+      ) : (
+        <Card>
+          <Card.Body>
+            <div className="table-responsive">
+              <Table hover>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Subject</th>
+                    <th>Status</th>
+                    <th>Sent</th>
+                    <th>Opened</th>
+                    <th>Clicked</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredCampaigns.map(campaign => (
+                    <tr key={campaign._id}>
+                      <td>{campaign.name}</td>
+                      <td>{campaign.subject}</td>
+                      <td>{getStatusBadge(campaign.status)}</td>
+                      <td>{campaign.statistics?.sent || 0}</td>
+                      <td>{campaign.statistics?.opened || 0}</td>
+                      <td>{campaign.statistics?.clicked || 0}</td>
+                      <td>{new Date(campaign.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        <div className="action-buttons">
+                          <Link to={`/campaigns/${campaign._id}`} className="btn btn-sm btn-info me-1">
+                            <FontAwesomeIcon icon={faEye} />
+                          </Link>
+                          
+                          {campaign.status === 'draft' && (
+                            <>
+                              <Link to={`/campaigns/edit/${campaign._id}`} className="btn btn-sm btn-warning me-1">
+                                <FontAwesomeIcon icon={faEdit} />
+                              </Link>
+                              
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                className="me-1"
+                                onClick={() => deleteCampaign(campaign._id)}
+                              >
+                                <FontAwesomeIcon icon={faTrash} />
+                              </Button>
+                              
+                              <Button
+                                variant="success"
+                                size="sm"
+                                onClick={() => sendCampaign(campaign._id)}
+                              >
+                                <FontAwesomeIcon icon={faPaperPlane} />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
+          </Card.Body>
+        </Card>
+      )}
+    </Container>
+  );
+};
+
+export default Campaigns;
+```
+
+```jsx
+// src/pages/CampaignCreate.js
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Container, Card, Form, Button, Row, Col, Tab, Nav } from 'react-bootstrap';
+import { Formik, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSave, faTimes, faEye } from '@fortawesome/free-solid-svg-icons';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import '../styles/CampaignForm.css';
+
+const CampaignCreate = () => {
+  const [templates, setTemplates] = useState([]);
+  const [recipientLists, setRecipientLists] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [emailContent, setEmailContent] = useState('');
+  const [previewMode, setPreviewMode] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Fetch templates and recipient lists
+    const fetchData = async () => {
+      try {
+        const [templatesRes, listsRes] = await Promise.all([
+          axios.get(`${process.env.REACT_APP_API_URL}/api/templates`),
+          axios.get(`${process.env.REACT_APP_API_URL}/api/recipients`)
+        ]);
+        
+        setTemplates(templatesRes.data.data);
+        setRecipientLists(listsRes.data.data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load required data');
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Form validation schema
+  const validationSchema = Yup.object({
+    name: Yup.string().required('Campaign name is required'),
+    subject: Yup.string().required('Email subject is required'),
+    fromName: Yup.string().required('Sender name is required'),
+    fromEmail: Yup.string().email('Invalid email').required('Sender email is required'),
+    recipientListIds: Yup.array().min(1, 'Select at least one recipient list')
+  });
+
+  const handleSubmit = async (values, { setSubmitting }) => {
+    try {
+      // Add email content to values
+      values.body = emailContent;
+      
+      // Create campaign
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/campaigns`, values);
+      
+      toast.success('Campaign created successfully');
+      navigate(`/campaigns/${response.data.data._id}`);
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+      toast.error('Failed to create campaign');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleTemplateSelect = (e, setFieldValue) => {
+    const templateId = e.target.value;
+    if (templateId) {
+      const template = templates.find(t => t._id === templateId);
+      setFieldValue('subject', template.subject);
+      setEmailContent(template.body);
+    }
+  };
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  return (
+    <Container fluid className="campaign-form-container">
+      <div className="campaign-form-header">
+        <h1>Create Campaign</h1>
+      </div>
+      
+      <Formik
+        initialValues={{
+          name: '',
+          subject: '',
+          fromName: '',
+          fromEmail: '',
+          templateId: '',
+          recipientListIds: [],
+          status: 'draft'
+        }}
+        validationSchema={validationSchema}
+        onSubmit={handleSubmit}
+      >
+        {({ handleSubmit, handleChange, values, touched, errors, isSubmitting, setFieldValue }) => (
+          <Form onSubmit={handleSubmit}>
+            <Row>
+              <Col lg={8}>
+                <Card className="mb-4">
+                  <Card.Header>
+                    <Nav variant="tabs" defaultActiveKey="details">
+                      <Nav.Item>
+                        <Nav.Link eventKey="details">Campaign Details</Nav.Link>
+                      </Nav.Item>
+                      <Nav.Item>
+                        <Nav.Link eventKey="content">Email Content</Nav.Link>
+                      </Nav.Item>
+                    </Nav>
+                  </Card.Header>
+                  <Card.Body>
+                    <Tab.Content>
+                      <Tab.Pane eventKey="details">
+                        <Form.Group className="mb-3">
+                          <Form.Label>Campaign Name</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="name"
+                            value={values.name}
+                            onChange={handleChange}
+                            isInvalid={touched.name && !!errors.name}
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {errors.name}
+                          </Form.Control.Feedback>
+                        </Form.Group>
+                        
+                        <Form.Group className="mb-3">
+                          <Form.Label>Subject Line</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="subject"
+                            value={values.subject}
+                            onChange={handleChange}
+                            isInvalid={touched.subject && !!errors.subject}
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {errors.subject}
+                          </Form.Control.Feedback>
+                        </Form.Group>
+                        
+                        <Row>
+                          <Col md={6}>
+                            <Form.Group className="mb-3">
+                              <Form.Label>From Name</Form.Label>
+                              <Form.Control
+                                type="text"
+                                name="fromName"
+                                value={values.fromName}
+                                onChange={handleChange}
+                                isInvalid={touched.fromName && !!errors.fromName}
+                              />
+                              <Form.Control.Feedback type="invalid">
+                                {errors.fromName}
+                              </Form.Control.Feedback>
+                            </Form.Group>
+                          </Col>
+                          <Col md={6}>
+                            <Form.Group className="mb-3">
+                              <Form.Label>From Email</Form## Part 4: Building the Frontend (Continued)
+
+### 4.5 Creating Campaign Management Components (Continued)
+
+Let's complete the CampaignCreate component:
+
+```jsx
+// src/pages/CampaignCreate.js (continued)
+                            <Form.Group className="mb-3">
+                              <Form.Label>From Email</Form.Label>
+                              <Form.Control
+                                type="email"
+                                name="fromEmail"
+                                value={values.fromEmail}
+                                onChange={handleChange}
+                                isInvalid={touched.fromEmail && !!errors.fromEmail}
+                              />
+                              <Form.Control.Feedback type="invalid">
+                                {errors.fromEmail}
+                              </Form.Control.Feedback>
+                            </Form.Group>
+                          </Col>
+                        </Row>
+                        
+                        <Form.Group className="mb-3">
+                          <Form.Label>Email Template (Optional)</Form.Label>
+                          <Form.Select
+                            name="templateId"
+                            value={values.templateId}
+                            onChange={(e) => {
+                              handleChange(e);
+                              handleTemplateSelect(e, setFieldValue);
+                            }}
+                          >
+                            <option value="">Select a template</option>
+                            {templates.map(template => (
+                              <option key={template._id} value={template._id}>
+                                {template.name}
+                              </option>
+                            ))}
+                          </Form.Select>
+                          <Form.Text className="text-muted">
+                            Selecting a template will pre-fill the subject and content
+                          </Form.Text>
+                        </Form.Group>
+                      </Tab.Pane>
+                      
+                      <Tab.Pane eventKey="content">
+                        <div className="email-editor-container">
+                          <div className="editor-actions mb-3">
+                            <Button
+                              variant={previewMode ? 'outline-primary' : 'primary'}
+                              size="sm"
+                              onClick={() => setPreviewMode(!previewMode)}
+                            >
+                              <FontAwesomeIcon icon={faEye} className="me-2" />
+                              {previewMode ? 'Back to Editor' : 'Preview'}
+                            </Button>
+                          </div>
+                          
+                          {previewMode ? (
+                            <div className="email-preview">
+                              <div className="preview-subject">
+                                <strong>Subject:</strong> {values.subject}
+                              </div>
+                              <div 
+                                className="preview-content"
+                                dangerouslySetInnerHTML={{ __html: emailContent }}
+                              />
+                            </div>
+                          ) : (
+                            <ReactQuill
+                              value={emailContent}
+                              onChange={setEmailContent}
+                              modules={{
+                                toolbar: [
+                                  [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                                  ['bold', 'italic', 'underline', 'strike'],
+                                  [{'list': 'ordered'}, {'list': 'bullet'}],
+                                  [{'color': []}, {'background': []}],
+                                  ['link', 'image'],
+                                  ['clean']
+                                ]
+                              }}
+                              formats={[
+                                'header',
+                                'bold', 'italic', 'underline', 'strike',
+                                'list', 'bullet',
+                                'color', 'background',
+                                'link', 'image'
+                              ]}
+                              className="email-editor"
+                            />
+                          )}
+                          
+                          {!previewMode && emailContent.length === 0 && (
+                            <div className="text-danger mt-2">
+                              Email content is required
+                            </div>
+                          )}
+                        </div>
+                      </Tab.Pane>
+                    </Tab.Content>
+                  </Card.Body>
+                </Card>
+              </Col>
+              
+              <Col lg={4}>
+                <Card className="mb-4">
+                  <Card.Header>
+                    <h5 className="mb-0">Recipients</h5>
+                  </Card.Header>
+                  <Card.Body>
+                    {recipientLists.length === 0 ? (
+                      <div className="text-center py-3">
+                        <p>No recipient lists found</p>
+                        <Button variant="primary" size="sm" href="/recipients/create">
+                          Create Recipient List
+                        </Button>
+                      </div>
+                    ) : (
+                      <Form.Group>
+                        {recipientLists.map(list => (
+                          <Form.Check
+                            key={list._id}
+                            type="checkbox"
+                            id={`list-${list._id}`}
+                            label={`${list.name} (${list.recipients.length} recipients)`}
+                            name="recipientListIds"
+                            value={list._id}
+                            onChange={(e) => {
+                              const listId = e.target.value;
+                              const isChecked = e.target.checked;
+                              
+                              let newRecipientListIds = [...values.recipientListIds];
+                              
+                              if (isChecked) {
+                                newRecipientListIds.push(listId);
+                              } else {
+                                newRecipientListIds = newRecipientListIds.filter(id => id !== listId);
+                              }
+                              
+                              setFieldValue('recipientListIds', newRecipientListIds);
+                            }}
+                          />
+                        ))}
+                        
+                        {touched.recipientListIds && errors.recipientListIds && (
+                          <div className="text-danger mt-2">
+                            {errors.recipientListIds}
+                          </div>
+                        )}
+                      </Form.Group>
+                    )}
+                  </Card.Body>
+                </Card>
+                
+                <Card>
+                  <Card.Header>
+                    <h5 className="mb-0">Actions</h5>
+                  </Card.Header>
+                  <Card.Body>
+                    <div className="d-grid gap-2">
+                      <Button
+                        variant="success"
+                        type="submit"
+                        disabled={isSubmitting || emailContent.length === 0}
+                      >
+                        <FontAwesomeIcon icon={faSave} className="me-2" />
+                        {isSubmitting ? 'Creating...' : 'Create Campaign'}
+                      </Button>
+                      
+                      <Button
+                        variant="outline-secondary"
+                        onClick={() => navigate('/campaigns')}
+                      >
+                        <FontAwesomeIcon icon={faTimes} className="me-2" />
+                        Cancel
+                      </Button>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+          </Form>
+        )}
+      </Formik>
+    </Container>
+  );
+};
+
+export default CampaignCreate;
+```
+
+### 4.6 Creating Campaign Details Page with Analytics
+
+Let's create a detailed campaign view page with analytics charts:
+
+```jsx
+// src/pages/CampaignDetails.js
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { Container, Row, Col, Card, Table, Button, Badge, Alert, Tab, Nav } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faChartBar, 
+  faListAlt, 
+  faEnvelope, 
+  faEye, 
+  faMousePointer,
+  faCalendarAlt,
+  faUser,
+  faPaperPlane,
+  faArrowLeft
+} from '@fortawesome/free-solid-svg-icons';
+import { 
+  LineChart, 
+  Line, 
+  BarChart, 
+  Bar, 
+  PieChart, 
+  Pie, 
+  Cell,
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer
+} from 'recharts';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import '../styles/CampaignDetails.css';
+
+const CampaignDetails = () => {
+  const { id } = useParams();
+  const [campaign, setCampaign] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchCampaignData();
+  }, [id]);
+
+  const fetchCampaignData = async () => {
+    try {
+      const [campaignRes, analyticsRes] = await Promise.all([
+        axios.get(`${process.env.REACT_APP_API_URL}/api/campaigns/${id}`),
+        axios.get(`${process.env.REACT_APP_API_URL}/api/analytics/campaigns/${id}`)
+      ]);
+      
+      setCampaign(campaignRes.data.data);
+      setAnalytics(analyticsRes.data.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching campaign data:', error);
+      setError('Failed to load campaign data');
+      setLoading(false);
+    }
+  };
+
+  const sendCampaign = async () => {
+    if (window.confirm('Are you sure you want to send this campaign now?')) {
+      try {
+        await axios.post(`${process.env.REACT_APP_API_URL}/api/campaigns/${id}/send`);
+        toast.success('Campaign is being sent');
+        // Refresh the data
+        fetchCampaignData();
+      } catch (error) {
+        console.error('Error sending campaign:', error);
+        toast.error('Failed to send campaign');
+      }
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    let variant;
+    switch (status) {
+      case 'draft':
+        variant = 'secondary';
+        break;
+      case 'scheduled':
+        variant = 'info';
+        break;
+      case 'sending':
+        variant = 'warning';
+        break;
+      case 'sent':
+        variant = 'success';
+        break;
+      case 'failed':
+        variant = 'danger';
+        break;
+      default:
+        variant = 'light';
+    }
+    return <Badge bg={variant}>{status}</Badge>;
+  };
+
+  // Chart colors
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
+  // Prepare data for pie chart
+  const prepareEmailStatusData = () => {
+    if (!analytics) return [];
+    
+    const { campaign } = analytics;
+    const { statistics } = campaign;
+    
+    return [
+      { name: 'Not Opened', value: statistics.sent - statistics.opened },
+      { name: 'Opened (Not Clicked)', value: statistics.opened - statistics.clicked },
+      { name: 'Clicked', value: statistics.clicked }
+    ].filter(item => item.value > 0);
+  };
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <Alert variant="danger">{error}</Alert>
+        <Button as={Link} to="/campaigns" variant="primary">
+          <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
+          Back to Campaigns
+        </Button>
+      </Container>
+    );
+  }
+
+  if (!campaign) {
+    return (
+      <Container>
+        <Alert variant="warning">Campaign not found</Alert>
+        <Button as={Link} to="/campaigns" variant="primary">
+          <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
+          Back to Campaigns
+        </Button>
+      </Container>
+    );
+  }
+
+  return (
+    <Container fluid className="campaign-details-container">
+      <div className="campaign-details-header">
+        <div>
+          <Button as={Link} to="/campaigns" variant="outline-primary" className="mb-3">
+            <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
+            Back to Campaigns
+          </Button>
+          <h1>{campaign.name}</h1>
+          <div className="campaign-meta">
+            {getStatusBadge(campaign.status)}
+            <span className="ms-3">
+              <FontAwesomeIcon icon={faCalendarAlt} className="me-1" />
+              Created: {new Date(campaign.createdAt).toLocaleDateString()}
+            </span>
+            {campaign.sentAt && (
+              <span className="ms-3">
+                <FontAwesomeIcon icon={faPaperPlane} className="me-1" />
+                Sent: {new Date(campaign.sentAt).toLocaleDateString()}
+              </span>
+            )}
+          </div>
+        </div>
+        
+        {campaign.status === 'draft' && (
+          <Button variant="success" onClick={sendCampaign}>
+            <FontAwesomeIcon icon={faPaperPlane} className="me-2" />
+            Send Campaign
+          </Button>
+        )}
+      </div>
+      
+      <Tab.Container defaultActiveKey="overview">
+        <Row>
+          <Col md={12}>
+            <Card className="mb-4">
+              <Card.Header>
+                <Nav variant="tabs">
+                  <Nav.Item>
+                    <Nav.Link eventKey="overview">
+                      <FontAwesomeIcon icon={faChartBar} className="me-2" />
+                      Overview
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="content">
+                      <FontAwesomeIcon icon={faEnvelope} className="me-2" />
+                      Email Content
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="recipients">
+                      <FontAwesomeIcon icon={faUser} className="me-2" />
+                      Recipients
+                    </Nav.Link>
+                  </Nav.Item>
+                </Nav>
+              </Card.Header>
+              <Card.Body>
+                <Tab.Content>
+                  <Tab.Pane eventKey="overview">
+                    <Row>
+                      <Col md={3}>
+                        <div className="stat-card">
+                          <div className="stat-icon bg-primary">
+                            <FontAwesomeIcon icon={faEnvelope} />
+                          </div>
+                          <div className="stat-details">
+                            <h3>{campaign.statistics?.sent || 0}</h3>
+                            <p>Emails Sent</p>
+                          </div>
+                        </div>
+                      </Col>
+                      <Col md={3}>
+                        <div className="stat-card">
+                          <div className="stat-icon bg-info">
+                            <FontAwesomeIcon icon={faEye} />
+                          </div>
+                          <div className="stat-details">
+                            <h3>{campaign.statistics?.opened || 0}</h3>
+                            <p>Emails Opened</p>
+                          </div>
+                        </div>
+                      </Col>
+                      <Col md={3}>
+                        <div className="stat-card">
+                          <div className="stat-icon bg-success">
+                            <FontAwesomeIcon icon={faMousePointer} />
+                          </div>
+                          <div className="stat-details">
+                            <h3>{campaign.statistics?.clicked || 0}</h3>
+                            <p>Clicked Links</p>
+                          </div>
+                        </div>
+                      </Col>
+                      <Col md={3}>
+                        <div className="stat-card">
+                          <div className="stat-icon bg-warning">
+                            <FontAwesomeIcon icon={faListAlt} />
+                          </div>
+                          <div className="stat-details">
+                            <h3>
+                              {campaign.statistics?.sent > 0 
+                                ? ((campaign.statistics?.opened / campaign.statistics?.sent) * 100).toFixed(2) 
+                                : 0}%
+                            </h3>
+                            <p>Open Rate</p>
+                          </div>
+                        </div>
+                      </Col>
+                    </Row>
+                    
+                    {campaign.status === 'sent' && analytics && (
+                      <>
+                        <Row className="mt-4">
+                          <Col md={6}>
+                            <Card>
+                              <Card.Header>Email Status</Card.Header>
+                              <Card.Body>
+                                <ResponsiveContainer width="100%" height={300}>
+                                  <PieChart>
+                                    <Pie
+                                      data={prepareEmailStatusData()}
+                                      cx="50%"
+                                      cy="50%"
+                                      labelLine={false}
+                                      outerRadius={80}
+                                      fill="#8884d8"
+                                      dataKey="value"
+                                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                                    >
+                                      {prepareEmailStatusData().map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                      ))}
+                                    </Pie>
+                                    <Tooltip formatter={(value) => [value, 'Recipients']} />
+                                    <Legend />
+                                  </PieChart>
+                                </ResponsiveContainer>
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                          <Col md={6}>
+                            <Card>
+                              <Card.Header>Opens Over Time</Card.Header>
+                              <Card.Body>
+                                <ResponsiveContainer width="100%" height={300}>
+                                  <BarChart
+                                    data={Object.entries(analytics.opensOverTime).map(([date, count]) => ({
+                                      date,
+                                      opens: count
+                                    }))}
+                                  >
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="date" />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Bar dataKey="opens" name="Opens" fill="#8884d8" />
+                                  </BarChart>
+                                </ResponsiveContainer>
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                        </Row>
+                        
+                        <Row className="mt-4">
+                          <Col md={12}>
+                            <Card>
+                              <Card.Header>Most Clicked Links</Card.Header>
+                              <Card.Body>
+                                {analytics.mostClickedLinks.length > 0 ? (
+                                  <Table striped bordered hover>
+                                    <thead>
+                                      <tr>
+                                        <th>URL</th>
+                                        <th>Clicks</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {analytics.mostClickedLinks.map((link, index) => (
+                                        <tr key={index}>
+                                          <td>
+                                            <a href={link.url} target="_blank" rel="noopener noreferrer">
+                                              {link.url}
+                                            </a>
+                                          </td>
+                                          <td>{link.count}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </Table>
+                                ) : (
+                                  <p className="text-center py-3">No links have been clicked yet</p>
+                                )}
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                        </Row>
+                      </>
+                    )}
+                  </Tab.Pane>
+                  
+                  <Tab.Pane eventKey="content">
+                    <Card>
+                      <Card.Header>
+                        <h5 className="mb-0">Email Content</h5>
+                      </Card.Header>
+                      <Card.Body>
+                        <div className="email-preview-container">
+                          <div className="email-preview-header">
+                            <div className="preview-field">
+                              <strong>From:</strong> {campaign.fromName} &lt;{campaign.fromEmail}&gt;
+                            </div>
+                            <div className="preview-field">
+                              <strong>Subject:</strong> {campaign.subject}
+                            </div>
+                          </div>
+                          <hr />
+                          <div 
+                            className="email-preview-body"
+                            dangerouslySetInnerHTML={{ __html: campaign.body }}
+                          />
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Tab.Pane>
+                  
+                  <Tab.Pane eventKey="recipients">
+                    <Card>
+                      <Card.Header>
+                        <h5 className="mb-0">Recipient Lists</h5>
+                      </Card.Header>
+                      <Card.Body>
+                        {campaign.recipientListIds && campaign.recipientListIds.length > 0 ? (
+                          <Table striped bordered hover>
+                            <thead>
+                              <tr>
+                                <th>List Name</th>
+                                <th>Recipients</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {campaign.recipientListIds.map(list => (
+                                <tr key={list._id}>
+                                  <td>{list.name}</td>
+                                  <td>{list.recipients.length}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </Table>
+                        ) : (
+                          <p className="text-center">No recipient lists assigned</p>
+                        )}
+                      </Card.Body>
+                    </Card>
+                  </Tab.Pane>
+                </Tab.Content>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Tab.Container>
+    </Container>
+  );
+};
+
+export default CampaignDetails;
+```
+
+## Part 5: CSS Styling for the Application
+
+Let's create the CSS files needed for our components:
+
+```css
+/* src/styles/App.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-color: #4361ee;
+  --secondary-color: #3f37c9;
+  --success-color: #4cc9f0;
+  --info-color: #4895ef;
+  --warning-color: #f72585;
+  --danger-color: #f72585;
+  --light-color: #f8f9fa;
+  --dark-color: #212529;
+  --sidebar-width: 250px;
+  --header-height: 60px;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f5f7fb;
+  color: #333;
+}
+
+/* Common Styles */
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+}
+
+/* Layout Styles */
+.main-layout {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: var(--header-height);
+}
+
+.content-container {
+  padding: 20px;
+}
+
+/* Card Styles */
+.card {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+  padding: 15px 20px;
+  font-weight: 500;
+}
+```
+
+```css
+/* src/styles/Sidebar.css */
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  background-color: #fff;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  z-index: 1000;
+}
+
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--primary-color);
+}
+
+.sidebar-menu {
+  flex: 1;
+  padding: 20px 0;
+  overflow-y: auto;
+}
+
+.sidebar-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li {
+  margin-bottom: 5px;
+}
+
+.sidebar-menu a {
+  display: block;
+  padding: 12px 20px;
+  color: #555;
+  text-decoration: none;
+  transition: all 0.3s;
+  border-left: 3px solid transparent;
+}
+
+.sidebar-menu a:hover {
+  background-color: #f8f9fa;
+  color: var(--primary-color);
+}
+
+.sidebar-menu a.active {
+  background-color: #f0f4ff;
+  color: var(--primary-color);
+  border-left-color: var(--primary-color);
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  color: #555;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.logout-btn:hover {
+  background-color: #f1f1f1;
+  color: var(--danger-color);
+}
+```
+
+```css
+/* src/styles/Dashboard.css */
+.dashboard-container {
+  padding: 20px;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.stats-cards {
+  margin-bottom: 30px;
+}
+
+.stats-card {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  height: 100%;
+}
+
+.stats-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  color: #fff;
+  font-size: 1.25rem;
+}
+
+.stats-details h3 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.stats-details p {
+  margin: 0;
+  color: #777;
+  font-size: 0.9rem;
+}
+
+.chart-card {
+  margin-bottom: 30px;
+}
+
+.chart-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chart-card h5 {
+  margin: 0;
+  font-weight: 500;
+}
+
+.recent-campaigns-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.campaign-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.campaign-item:last-child {
+  border-bottom: none;
+}
+
+.campaign-info h6 {
+  margin: 0 0 5px 0;
+  font-weight: 500;
+}
+
+.campaign-info p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.campaign-stats {
+  display: flex;
+  gap: 15px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-item small {
+  display: block;
+  color: #777;
+  font-size: 0.8rem;
+}
+
+.stat-item span {
+  font-weight: 600;
+  color: #333;
+}
+
+.bg-primary {
+  background-color: var(--primary-color);
+}
+
+.bg-success {
+  background-color: var(--success-color);
+}
+
+.bg-info {
+  background-color: var(--info-color);
+}
+
+.bg-warning {
+  background-color: var(--warning-color);
+}
+```
+
+## Part 6: Deployment and Monitoring
+
+### 6.1 Frontend Deployment to Netlify
+
+1. **Build your React application**:
+   ```bash
+   cd bulk-email-tool-frontend
+   npm run build
+   ```
+
+2. **Create a Netlify configuration file** (`netlify.toml` in the project root):
+   ```toml
+   [build]
+     command = "npm run build"
+     publish = "build"
+   
+   [[redirects]]
+     from = "/*"
+     to = "/index.html"
+     status = 200
+   ```
+
+3. **Deploy to Netlify**:
+   - Sign up for a Netlify account
+   - Connect your GitHub repository
+   - Configure build settings:
+     - Build command: `npm run build`
+     - Publish directory: `build`
+   - Set environment variables:
+     - `REACT_APP_API_URL`: Your backend API URL (e.g., https://your-backend.render.com/api)
+   - Deploy the site
+
+### 6.2 Backend Deployment to Render
+
+1. **Prepare your backend for deployment**:
+   - Make sure your `.env` file is not committed to version control
+   - Create a `.env.example` file with placeholders for sensitive information
+   - Update your `package.json` with appropriate start scripts
+
+2. **Create a Render configuration file** (`render.yaml` in the project root):
+   ```yaml
+   services:
+     - type: web
+       name: bulk-email-tool-backend
+       env: node
+       buildCommand: npm install
+       startCommand: npm start
+       envVars:
+         - key: NODE_ENV
+           value: production
+         - key: PORT
+           value: 10000
+         - key: MONGO_URI
+           sync: false
+         - key: JWT_SECRET
+           sync: false
+         - key: EMAIL_SERVICE
+           sync: false
+         - key: EMAIL_PORT
+           sync: false
+         - key: EMAIL_USER
+           sync: false
+         - key: EMAIL_PASS
+           sync: false
+   ```
+
+3. **Deploy to Render**:
+   - Sign up for a Render account
+   - Connect your GitHub repository
+   - Configure the necessary environment variables
+   - Deploy the service
+
+### 6.3 Monitoring and Maintenance
+
+1. **Set up logging**:
+   - Implement logging middleware in the backend
+   - Consider using a service like Sentry for error tracking
+
+2. **Performance monitoring**## Part 4: Building the Frontend (Continued)
+
+### 4.5 Creating Campaign Management Components (Continued)
+
+Let's complete the CampaignCreate component:
+
+```jsx
+// src/pages/CampaignCreate.js (continued)
+                            <Form.Group className="mb-3">
+                              <Form.Label>From Email</Form.Label>
+                              <Form.Control
+                                type="email"
+                                name="fromEmail"
+                                value={values.fromEmail}
+                                onChange={handleChange}
+                                isInvalid={touched.fromEmail && !!errors.fromEmail}
+                              />
+                              <Form.Control.Feedback type="invalid">
+                                {errors.fromEmail}
+                              </Form.Control.Feedback>
+                            </Form.Group>
+                          </Col>
+                        </Row>
+                        
+                        <Form.Group className="mb-3">
+                          <Form.Label>Email Template (Optional)</Form.Label>
+                          <Form.Select
+                            name="templateId"
+                            value={values.templateId}
+                            onChange={(e) => {
+                              handleChange(e);
+                              handleTemplateSelect(e, setFieldValue);
+                            }}
+                          >
+                            <option value="">Select a template</option>
+                            {templates.map(template => (
+                              <option key={template._id} value={template._id}>
+                                {template.name}
+                              </option>
+                            ))}
+                          </Form.Select>
+                          <Form.Text className="text-muted">
+                            Selecting a template will pre-fill the subject and content
+                          </Form.Text>
+                        </Form.Group>
+                      </Tab.Pane>
+                      
+                      <Tab.Pane eventKey="content">
+                        <div className="email-editor-container">
+                          <div className="editor-actions mb-3">
+                            <Button
+                              variant={previewMode ? 'outline-primary' : 'primary'}
+                              size="sm"
+                              onClick={() => setPreviewMode(!previewMode)}
+                            >
+                              <FontAwesomeIcon icon={faEye} className="me-2" />
+                              {previewMode ? 'Back to Editor' : 'Preview'}
+                            </Button>
+                          </div>
+                          
+                          {previewMode ? (
+                            <div className="email-preview">
+                              <div className="preview-subject">
+                                <strong>Subject:</strong> {values.subject}
+                              </div>
+                              <div 
+                                className="preview-content"
+                                dangerouslySetInnerHTML={{ __html: emailContent }}
+                              />
+                            </div>
+                          ) : (
+                            <ReactQuill
+                              value={emailContent}
+                              onChange={setEmailContent}
+                              modules={{
+                                toolbar: [
+                                  [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                                  ['bold', 'italic', 'underline', 'strike'],
+                                  [{'list': 'ordered'}, {'list': 'bullet'}],
+                                  [{'color': []}, {'background': []}],
+                                  ['link', 'image'],
+                                  ['clean']
+                                ]
+                              }}
+                              formats={[
+                                'header',
+                                'bold', 'italic', 'underline', 'strike',
+                                'list', 'bullet',
+                                'color', 'background',
+                                'link', 'image'
+                              ]}
+                              className="email-editor"
+                            />
+                          )}
+                          
+                          {!previewMode && emailContent.length === 0 && (
+                            <div className="text-danger mt-2">
+                              Email content is required
+                            </div>
+                          )}
+                        </div>
+                      </Tab.Pane>
+                    </Tab.Content>
+                  </Card.Body>
+                </Card>
+              </Col>
+              
+              <Col lg={4}>
+                <Card className="mb-4">
+                  <Card.Header>
+                    <h5 className="mb-0">Recipients</h5>
+                  </Card.Header>
+                  <Card.Body>
+                    {recipientLists.length === 0 ? (
+                      <div className="text-center py-3">
+                        <p>No recipient lists found</p>
+                        <Button variant="primary" size="sm" href="/recipients/create">
+                          Create Recipient List
+                        </Button>
+                      </div>
+                    ) : (
+                      <Form.Group>
+                        {recipientLists.map(list => (
+                          <Form.Check
+                            key={list._id}
+                            type="checkbox"
+                            id={`list-${list._id}`}
+                            label={`${list.name} (${list.recipients.length} recipients)`}
+                            name="recipientListIds"
+                            value={list._id}
+                            onChange={(e) => {
+                              const listId = e.target.value;
+                              const isChecked = e.target.checked;
+                              
+                              let newRecipientListIds = [...values.recipientListIds];
+                              
+                              if (isChecked) {
+                                newRecipientListIds.push(listId);
+                              } else {
+                                newRecipientListIds = newRecipientListIds.filter(id => id !== listId);
+                              }
+                              
+                              setFieldValue('recipientListIds', newRecipientListIds);
+                            }}
+                          />
+                        ))}
+                        
+                        {touched.recipientListIds && errors.recipientListIds && (
+                          <div className="text-danger mt-2">
+                            {errors.recipientListIds}
+                          </div>
+                        )}
+                      </Form.Group>
+                    )}
+                  </Card.Body>
+                </Card>
+                
+                <Card>
+                  <Card.Header>
+                    <h5 className="mb-0">Actions</h5>
+                  </Card.Header>
+                  <Card.Body>
+                    <div className="d-grid gap-2">
+                      <Button
+                        variant="success"
+                        type="submit"
+                        disabled={isSubmitting || emailContent.length === 0}
+                      >
+                        <FontAwesomeIcon icon={faSave} className="me-2" />
+                        {isSubmitting ? 'Creating...' : 'Create Campaign'}
+                      </Button>
+                      
+                      <Button
+                        variant="outline-secondary"
+                        onClick={() => navigate('/campaigns')}
+                      >
+                        <FontAwesomeIcon icon={faTimes} className="me-2" />
+                        Cancel
+                      </Button>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+          </Form>
+        )}
+      </Formik>
+    </Container>
+  );
+};
+
+export default CampaignCreate;
+```
+
+### 4.6 Creating Campaign Details Page with Analytics
+
+Let's create a detailed campaign view page with analytics charts:
+
+```jsx
+// src/pages/CampaignDetails.js
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { Container, Row, Col, Card, Table, Button, Badge, Alert, Tab, Nav } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faChartBar, 
+  faListAlt, 
+  faEnvelope, 
+  faEye, 
+  faMousePointer,
+  faCalendarAlt,
+  faUser,
+  faPaperPlane,
+  faArrowLeft
+} from '@fortawesome/free-solid-svg-icons';
+import { 
+  LineChart, 
+  Line, 
+  BarChart, 
+  Bar, 
+  PieChart, 
+  Pie, 
+  Cell,
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer
+} from 'recharts';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import '../styles/CampaignDetails.css';
+
+const CampaignDetails = () => {
+  const { id } = useParams();
+  const [campaign, setCampaign] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchCampaignData();
+  }, [id]);
+
+  const fetchCampaignData = async () => {
+    try {
+      const [campaignRes, analyticsRes] = await Promise.all([
+        axios.get(`${process.env.REACT_APP_API_URL}/api/campaigns/${id}`),
+        axios.get(`${process.env.REACT_APP_API_URL}/api/analytics/campaigns/${id}`)
+      ]);
+      
+      setCampaign(campaignRes.data.data);
+      setAnalytics(analyticsRes.data.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching campaign data:', error);
+      setError('Failed to load campaign data');
+      setLoading(false);
+    }
+  };
+
+  const sendCampaign = async () => {
+    if (window.confirm('Are you sure you want to send this campaign now?')) {
+      try {
+        await axios.post(`${process.env.REACT_APP_API_URL}/api/campaigns/${id}/send`);
+        toast.success('Campaign is being sent');
+        // Refresh the data
+        fetchCampaignData();
+      } catch (error) {
+        console.error('Error sending campaign:', error);
+        toast.error('Failed to send campaign');
+      }
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    let variant;
+    switch (status) {
+      case 'draft':
+        variant = 'secondary';
+        break;
+      case 'scheduled':
+        variant = 'info';
+        break;
+      case 'sending':
+        variant = 'warning';
+        break;
+      case 'sent':
+        variant = 'success';
+        break;
+      case 'failed':
+        variant = 'danger';
+        break;
+      default:
+        variant = 'light';
+    }
+    return <Badge bg={variant}>{status}</Badge>;
+  };
+
+  // Chart colors
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
+  // Prepare data for pie chart
+  const prepareEmailStatusData = () => {
+    if (!analytics) return [];
+    
+    const { campaign } = analytics;
+    const { statistics } = campaign;
+    
+    return [
+      { name: 'Not Opened', value: statistics.sent - statistics.opened },
+      { name: 'Opened (Not Clicked)', value: statistics.opened - statistics.clicked },
+      { name: 'Clicked', value: statistics.clicked }
+    ].filter(item => item.value > 0);
+  };
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <Alert variant="danger">{error}</Alert>
+        <Button as={Link} to="/campaigns" variant="primary">
+          <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
+          Back to Campaigns
+        </Button>
+      </Container>
+    );
+  }
+
+  if (!campaign) {
+    return (
+      <Container>
+        <Alert variant="warning">Campaign not found</Alert>
+        <Button as={Link} to="/campaigns" variant="primary">
+          <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
+          Back to Campaigns
+        </Button>
+      </Container>
+    );
+  }
+
+  return (
+    <Container fluid className="campaign-details-container">
+      <div className="campaign-details-header">
+        <div>
+          <Button as={Link} to="/campaigns" variant="outline-primary" className="mb-3">
+            <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
+            Back to Campaigns
+          </Button>
+          <h1>{campaign.name}</h1>
+          <div className="campaign-meta">
+            {getStatusBadge(campaign.status)}
+            <span className="ms-3">
+              <FontAwesomeIcon icon={faCalendarAlt} className="me-1" />
+              Created: {new Date(campaign.createdAt).toLocaleDateString()}
+            </span>
+            {campaign.sentAt && (
+              <span className="ms-3">
+                <FontAwesomeIcon icon={faPaperPlane} className="me-1" />
+                Sent: {new Date(campaign.sentAt).toLocaleDateString()}
+              </span>
+            )}
+          </div>
+        </div>
+        
+        {campaign.status === 'draft' && (
+          <Button variant="success" onClick={sendCampaign}>
+            <FontAwesomeIcon icon={faPaperPlane} className="me-2" />
+            Send Campaign
+          </Button>
+        )}
+      </div>
+      
+      <Tab.Container defaultActiveKey="overview">
+        <Row>
+          <Col md={12}>
+            <Card className="mb-4">
+              <Card.Header>
+                <Nav variant="tabs">
+                  <Nav.Item>
+                    <Nav.Link eventKey="overview">
+                      <FontAwesomeIcon icon={faChartBar} className="me-2" />
+                      Overview
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="content">
+                      <FontAwesomeIcon icon={faEnvelope} className="me-2" />
+                      Email Content
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="recipients">
+                      <FontAwesomeIcon icon={faUser} className="me-2" />
+                      Recipients
+                    </Nav.Link>
+                  </Nav.Item>
+                </Nav>
+              </Card.Header>
+              <Card.Body>
+                <Tab.Content>
+                  <Tab.Pane eventKey="overview">
+                    <Row>
+                      <Col md={3}>
+                        <div className="stat-card">
+                          <div className="stat-icon bg-primary">
+                            <FontAwesomeIcon icon={faEnvelope} />
+                          </div>
+                          <div className="stat-details">
+                            <h3>{campaign.statistics?.sent || 0}</h3>
+                            <p>Emails Sent</p>
+                          </div>
+                        </div>
+                      </Col>
+                      <Col md={3}>
+                        <div className="stat-card">
+                          <div className="stat-icon bg-info">
+                            <FontAwesomeIcon icon={faEye} />
+                          </div>
+                          <div className="stat-details">
+                            <h3>{campaign.statistics?.opened || 0}</h3>
+                            <p>Emails Opened</p>
+                          </div>
+                        </div>
+                      </Col>
+                      <Col md={3}>
+                        <div className="stat-card">
+                          <div className="stat-icon bg-success">
+                            <FontAwesomeIcon icon={faMousePointer} />
+                          </div>
+                          <div className="stat-details">
+                            <h3>{campaign.statistics?.clicked || 0}</h3>
+                            <p>Clicked Links</p>
+                          </div>
+                        </div>
+                      </Col>
+                      <Col md={3}>
+                        <div className="stat-card">
+                          <div className="stat-icon bg-warning">
+                            <FontAwesomeIcon icon={faListAlt} />
+                          </div>
+                          <div className="stat-details">
+                            <h3>
+                              {campaign.statistics?.sent > 0 
+                                ? ((campaign.statistics?.opened / campaign.statistics?.sent) * 100).toFixed(2) 
+                                : 0}%
+                            </h3>
+                            <p>Open Rate</p>
+                          </div>
+                        </div>
+                      </Col>
+                    </Row>
+                    
+                    {campaign.status === 'sent' && analytics && (
+                      <>
+                        <Row className="mt-4">
+                          <Col md={6}>
+                            <Card>
+                              <Card.Header>Email Status</Card.Header>
+                              <Card.Body>
+                                <ResponsiveContainer width="100%" height={300}>
+                                  <PieChart>
+                                    <Pie
+                                      data={prepareEmailStatusData()}
+                                      cx="50%"
+                                      cy="50%"
+                                      labelLine={false}
+                                      outerRadius={80}
+                                      fill="#8884d8"
+                                      dataKey="value"
+                                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                                    >
+                                      {prepareEmailStatusData().map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                      ))}
+                                    </Pie>
+                                    <Tooltip formatter={(value) => [value, 'Recipients']} />
+                                    <Legend />
+                                  </PieChart>
+                                </ResponsiveContainer>
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                          <Col md={6}>
+                            <Card>
+                              <Card.Header>Opens Over Time</Card.Header>
+                              <Card.Body>
+                                <ResponsiveContainer width="100%" height={300}>
+                                  <BarChart
+                                    data={Object.entries(analytics.opensOverTime).map(([date, count]) => ({
+                                      date,
+                                      opens: count
+                                    }))}
+                                  >
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="date" />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Bar dataKey="opens" name="Opens" fill="#8884d8" />
+                                  </BarChart>
+                                </ResponsiveContainer>
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                        </Row>
+                        
+                        <Row className="mt-4">
+                          <Col md={12}>
+                            <Card>
+                              <Card.Header>Most Clicked Links</Card.Header>
+                              <Card.Body>
+                                {analytics.mostClickedLinks.length > 0 ? (
+                                  <Table striped bordered hover>
+                                    <thead>
+                                      <tr>
+                                        <th>URL</th>
+                                        <th>Clicks</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {analytics.mostClickedLinks.map((link, index) => (
+                                        <tr key={index}>
+                                          <td>
+                                            <a href={link.url} target="_blank" rel="noopener noreferrer">
+                                              {link.url}
+                                            </a>
+                                          </td>
+                                          <td>{link.count}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </Table>
+                                ) : (
+                                  <p className="text-center py-3">No links have been clicked yet</p>
+                                )}
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                        </Row>
+                      </>
+                    )}
+                  </Tab.Pane>
+                  
+                  <Tab.Pane eventKey="content">
+                    <Card>
+                      <Card.Header>
+                        <h5 className="mb-0">Email Content</h5>
+                      </Card.Header>
+                      <Card.Body>
+                        <div className="email-preview-container">
+                          <div className="email-preview-header">
+                            <div className="preview-field">
+                              <strong>From:</strong> {campaign.fromName} &lt;{campaign.fromEmail}&gt;
+                            </div>
+                            <div className="preview-field">
+                              <strong>Subject:</strong> {campaign.subject}
+                            </div>
+                          </div>
+                          <hr />
+                          <div 
+                            className="email-preview-body"
+                            dangerouslySetInnerHTML={{ __html: campaign.body }}
+                          />
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Tab.Pane>
+                  
+                  <Tab.Pane eventKey="recipients">
+                    <Card>
+                      <Card.Header>
+                        <h5 className="mb-0">Recipient Lists</h5>
+                      </Card.Header>
+                      <Card.Body>
+                        {campaign.recipientListIds && campaign.recipientListIds.length > 0 ? (
+                          <Table striped bordered hover>
+                            <thead>
+                              <tr>
+                                <th>List Name</th>
+                                <th>Recipients</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {campaign.recipientListIds.map(list => (
+                                <tr key={list._id}>
+                                  <td>{list.name}</td>
+                                  <td>{list.recipients.length}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </Table>
+                        ) : (
+                          <p className="text-center">No recipient lists assigned</p>
+                        )}
+                      </Card.Body>
+                    </Card>
+                  </Tab.Pane>
+                </Tab.Content>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Tab.Container>
+    </Container>
+  );
+};
+
+export default CampaignDetails;
+```
+
+## Part 5: CSS Styling for the Application
+
+Let's create the CSS files needed for our components:
+
+```css
+/* src/styles/App.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-color: #4361ee;
+  --secondary-color: #3f37c9;
+  --success-color: #4cc9f0;
+  --info-color: #4895ef;
+  --warning-color: #f72585;
+  --danger-color: #f72585;
+  --light-color: #f8f9fa;
+  --dark-color: #212529;
+  --sidebar-width: 250px;
+  --header-height: 60px;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f5f7fb;
+  color: #333;
+}
+
+/* Common Styles */
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+}
+
+/* Layout Styles */
+.main-layout {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: var(--header-height);
+}
+
+.content-container {
+  padding: 20px;
+}
+
+/* Card Styles */
+.card {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+  padding: 15px 20px;
+  font-weight: 500;
+}
+```
+
+```css
+/* src/styles/Sidebar.css */
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  background-color: #fff;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  z-index: 1000;
+}
+
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--primary-color);
+}
+
+.sidebar-menu {
+  flex: 1;
+  padding: 20px 0;
+  overflow-y: auto;
+}
+
+.sidebar-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li {
+  margin-bottom: 5px;
+}
+
+.sidebar-menu a {
+  display: block;
+  padding: 12px 20px;
+  color: #555;
+  text-decoration: none;
+  transition: all 0.3s;
+  border-left: 3px solid transparent;
+}
+
+.sidebar-menu a:hover {
+  background-color: #f8f9fa;
+  color: var(--primary-color);
+}
+
+.sidebar-menu a.active {
+  background-color: #f0f4ff;
+  color: var(--primary-color);
+  border-left-color: var(--primary-color);
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  color: #555;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.logout-btn:hover {
+  background-color: #f1f1f1;
+  color: var(--danger-color);
+}
+```
+
+```css
+/* src/styles/Dashboard.css */
+.dashboard-container {
+  padding: 20px;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.stats-cards {
+  margin-bottom: 30px;
+}
+
+.stats-card {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  height: 100%;
+}
+
+.stats-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  color: #fff;
+  font-size: 1.25rem;
+}
+
+.stats-details h3 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.stats-details p {
+  margin: 0;
+  color: #777;
+  font-size: 0.9rem;
+}
+
+.chart-card {
+  margin-bottom: 30px;
+}
+
+.chart-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chart-card h5 {
+  margin: 0;
+  font-weight: 500;
+}
+
+.recent-campaigns-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.campaign-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.campaign-item:last-child {
+  border-bottom: none;
+}
+
+.campaign-info h6 {
+  margin: 0 0 5px 0;
+  font-weight: 500;
+}
+
+.campaign-info p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.campaign-stats {
+  display: flex;
+  gap: 15px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-item small {
+  display: block;
+  color: #777;
+  font-size: 0.8rem;
+}
+
+.stat-item span {
+  font-weight: 600;
+  color: #333;
+}
+
+.bg-primary {
+  background-color: var(--primary-color);
+}
+
+.bg-success {
+  background-color: var(--success-color);
+}
+
+.bg-info {
+  background-color: var(--info-color);
+}
+
+.bg-warning {
+  background-color: var(--warning-color);
+}
+```
+
+## Part 6: Deployment and Monitoring
+
+### 6.1 Frontend Deployment to Netlify
+
+1. **Build your React application**:
+   ```bash
+   cd bulk-email-tool-frontend
+   npm run build
+   ```
+
+2. **Create a Netlify configuration file** (`netlify.toml` in the project root):
+   ```toml
+   [build]
+     command = "npm run build"
+     publish = "build"
+   
+   [[redirects]]
+     from = "/*"
+     to = "/index.html"
+     status = 200
+   ```
+
+3. **Deploy to Netlify**:
+   - Sign up for a Netlify account
+   - Connect your GitHub repository
+   - Configure build settings:
+     - Build command: `npm run build`
+     - Publish directory: `build`
+   - Set environment variables:
+     - `REACT_APP_API_URL`: Your backend API URL (e.g., https://your-backend.render.com/api)
+   - Deploy the site
+
+### 6.2 Backend Deployment to Render
+
+1. **Prepare your backend for deployment**:
+   - Make sure your `.env` file is not committed to version control
+   - Create a `.env.example` file with placeholders for sensitive information
+   - Update your `package.json` with appropriate start scripts
+
+2. **Create a Render configuration file** (`render.yaml` in the project root):
+   ```yaml
+   services:
+     - type: web
+       name: bulk-email-tool-backend
+       env: node
+       buildCommand: npm install
+       startCommand: npm start
+       envVars:
+         - key: NODE_ENV
+           value: production
+         - key: PORT
+           value: 10000
+         - key: MONGO_URI
+           sync: false
+         - key: JWT_SECRET
+           sync: false
+         - key: EMAIL_SERVICE
+           sync: false
+         - key: EMAIL_PORT
+           sync: false
+         - key: EMAIL_USER
+           sync: false
+         - key: EMAIL_PASS
+           sync: false
+   ```
+
+3. **Deploy to Render**:
+   - Sign up for a Render account
+   - Connect your GitHub repository
+   - Configure the necessary environment variables
+   - Deploy the service
+
+### 6.3 Monitoring and Maintenance
+
+1. **Set up logging**:
+   - Implement logging middleware in the backend
+   - Consider using a service like Sentry for error tracking
+
+2. **Performance monitoring**## Part 6: Deployment and Monitoring (Continued)
+
+### 6.3 Monitoring and Maintenance (Continued)
+
+2. **Performance monitoring**:
+   - Implement server health metrics using tools like PM2 or New Relic
+   - Monitor API response times and database performance
+   - Set up alerts for critical failures or performance degradations
+   - Create a dashboard to visualize system health metrics
+
+3. **Database backups**:
+   - Schedule regular automated backups of your MongoDB database
+   - Store backups securely in an off-site location
+   - Test backup restoration procedures regularly
+   - Implement a retention policy for backups (e.g., daily backups for 7 days, weekly backups for 1 month)
+
+4. **Security updates**:
+   - Regularly update dependencies to patch security vulnerabilities
+   - Use tools like npm audit to scan for known vulnerabilities
+   - Implement a security update procedure that includes testing before deployment
+   - Stay informed about security advisories for your technology stack
+
+5. **Scaling considerations**:
+   - Monitor resource usage and set thresholds for scaling decisions
+   - Implement caching strategies for frequently accessed data
+   - Consider implementing a queue system for email sending to handle high loads
+   - Develop a scaling plan for different levels of user growth
+
+## Part 7: Advanced Features and Optimizations
+
+### 7.1 A/B Testing Functionality
+
+A/B testing allows you to send different versions of an email to segments of your audience to determine which performs better. Let's implement this feature:
+
+1. **Update Campaign Model**:
+   ```javascript
+   // models/Campaign.js (additional fields)
+   const CampaignSchema = new mongoose.Schema({
+     // ... existing fields
+     isABTest: {
+       type: Boolean,
+       default: false
+     },
+     variants: [{
+       name: String,
+       subject: String,
+       body: String,
+       recipientPercentage: Number,
+       statistics: {
+         sent: { type: Number, default: 0 },
+         delivered: { type: Number, default: 0 },
+         opened: { type: Number, default: 0 },
+         clicked: { type: Number, default: 0 },
+         bounced: { type: Number, default: 0 }
+       }
+     }],
+     winnerVariant: {
+       type: String
+     },
+     testDuration: {
+       type: Number, // Duration in hours
+       default: 24
+     }
+   });
+   ```
+
+2. **Implement A/B Test Campaign Creation UI**:
+   - Add variant creation form elements
+   - Include percentage allocation controls
+   - Allow setting test duration
+
+3. **Update the Email Service**:
+   ```javascript
+   // services/emailService.js (A/B test handling)
+   const sendABTestCampaign = async (campaign) => {
+     try {
+       // Get all recipients
+       const recipients = getAllRecipientsFromLists(campaign.recipientListIds);
+       
+       // Shuffle recipients for randomization
+       const shuffledRecipients = shuffleArray(recipients);
+       
+       // Calculate recipient counts for each variant
+       const variantRecipients = {};
+       let startIndex = 0;
+       
+       campaign.variants.forEach(variant => {
+         const count = Math.floor(shuffledRecipients.length * (variant.recipientPercentage / 100));
+         variantRecipients[variant.name] = shuffledRecipients.slice(startIndex, startIndex + count);
+         startIndex += count;
+       });
+       
+       // Send emails for each variant
+       for (const [variantName, recipients] of Object.entries(variantRecipients)) {
+         const variant = campaign.variants.find(v => v.name === variantName);
+         
+         for (const recipient of recipients) {
+           // Send email with variant content
+           const result = await sendEmail({
+             from: `${campaign.fromName} <${campaign.fromEmail}>`,
+             to: recipient.email,
+             subject: variant.subject,
+             html: prepareEmailContent(variant.body, campaign._id, recipient.email, variantName)
+           });
+           
+           if (result.success) {
+             variant.statistics.sent += 1;
+             variant.statistics.delivered += 1;
+           } else {
+             variant.statistics.bounced += 1;
+           }
+         }
+       }
+       
+       // Schedule winner selection after test duration
+       scheduleWinnerSelection(campaign._id, campaign.testDuration);
+       
+       return { success: true };
+     } catch (error) {
+       console.error('A/B test campaign sending error:', error);
+       throw error;
+     }
+   };
+   
+   const scheduleWinnerSelection = (campaignId, hours) => {
+     setTimeout(async () => {
+       try {
+         const campaign = await Campaign.findById(campaignId);
+         
+         // Find variant with highest open rate
+         let bestVariant = null;
+         let bestOpenRate = 0;
+         
+         campaign.variants.forEach(variant => {
+           const openRate = variant.statistics.sent > 0 
+             ? (variant.statistics.opened / variant.statistics.sent) 
+             : 0;
+             
+           if (openRate > bestOpenRate) {
+             bestOpenRate = openRate;
+             bestVariant = variant.name;
+           }
+         });
+         
+         // Set winner and send to remaining recipients
+         campaign.winnerVariant = bestVariant;
+         await campaign.save();
+         
+         // Send to remaining recipients using winner variant
+         sendWinnerVariantToRemaining(campaign);
+       } catch (error) {
+         console.error('Winner selection error:', error);
+       }
+     }, hours * 60 * 60 * 1000); // Convert hours to milliseconds
+   };
+   ```
+
+### 7.2 Email Automation Workflows
+
+Email automation allows you to set up sequences of emails triggered by specific events or schedules:
+
+1. **Create Workflow Models**:
+   ```javascript
+   // models/Workflow.js
+   const WorkflowSchema = new mongoose.Schema({
+     userId: {
+       type: mongoose.Schema.Types.ObjectId,
+       ref: 'User',
+       required: true
+     },
+     name: {
+       type: String,
+       required: true
+     },
+     triggerType: {
+       type: String,
+       enum: ['signup', 'schedule', 'custom'],
+       required: true
+     },
+     status: {
+       type: String,
+       enum: ['active', 'paused', 'draft'],
+       default: 'draft'
+     },
+     steps: [{
+       stepType: {
+         type: String,
+         enum: ['email', 'delay', 'condition'],
+         required: true
+       },
+       order: Number,
+       config: {
+         // For email steps
+         templateId: {
+           type: mongoose.Schema.Types.ObjectId,
+           ref: 'Template'
+         },
+         subject: String,
+         body: String,
+         
+         // For delay steps
+         delayType: {
+           type: String,
+           enum: ['minutes', 'hours', 'days']
+         },
+         delayAmount: Number,
+         
+         // For condition steps
+         conditionType: {
+           type: String,
+           enum: ['opened', 'clicked', 'not-opened', 'not-clicked']
+         },
+         conditionStepReference: Number,
+         trueBranch: Number,
+         falseBranch: Number
+       }
+     }],
+     recipientListIds: [{
+       type: mongoose.Schema.Types.ObjectId,
+       ref: 'RecipientList'
+     }],
+     createdAt: {
+       type: Date,
+       default: Date.now
+     },
+     updatedAt: {
+       type: Date,
+       default: Date.now
+     }
+   });
+   ```
+
+2. **Implement Workflow Execution Service**:
+   ```javascript
+   // services/workflowService.js
+   const executeWorkflow = async (workflow, recipient, startStepIndex = 0) => {
+     try {
+       const step = workflow.steps[startStepIndex];
+       
+       if (!step) {
+         return { success: true, message: 'Workflow completed' };
+       }
+       
+       switch (step.stepType) {
+         case 'email':
+           await sendWorkflowEmail(workflow, step, recipient);
+           // Schedule next step
+           scheduleNextStep(workflow, recipient, startStepIndex + 1);
+           break;
+           
+         case 'delay':
+           // Calculate delay in milliseconds
+           const delayMs = calculateDelayMs(step.config.delayType, step.config.delayAmount);
+           // Schedule next step with delay
+           scheduleNextStep(workflow, recipient, startStepIndex + 1, delayMs);
+           break;
+           
+         case 'condition':
+           // Check condition and determine next branch
+           const conditionMet = await checkCondition(workflow, step, recipient);
+           const nextStepIndex = conditionMet ? step.config.trueBranch : step.config.falseBranch;
+           // Execute next branch immediately
+           executeWorkflow(workflow, recipient, nextStepIndex);
+           break;
+       }
+       
+       return { success: true };
+     } catch (error) {
+       console.error('Workflow execution error:', error);
+       return { success: false, error: error.message };
+     }
+   };
+   
+   const scheduleNextStep = (workflow, recipient, nextStepIndex, delayMs = 0) => {
+     setTimeout(() => {
+       executeWorkflow(workflow, recipient, nextStepIndex)
+         .catch(error => console.error('Next step execution error:', error));
+     }, delayMs);
+   };
+   
+   const sendWorkflowEmail = async (workflow, step, recipient) => {
+     // Prepare email content
+     let subject = step.config.subject;
+     let body = step.config.body;
+     
+     // Personalize content
+     subject = subject.replace(/{{name}}/g, recipient.name || '');
+     body = body.replace(/{{name}}/g, recipient.name || '').replace(/{{email}}/g, recipient.email);
+     
+     // Add tracking
+     body += generateTrackingPixel(workflow._id, recipient.email, step.order);
+     body = addLinkTracking(body, workflow._id, recipient.email, step.order);
+     
+     // Send email
+     return await sendEmail({
+       from: process.env.EMAIL_FROM,
+       to: recipient.email,
+       subject,
+       html: body
+     });
+   };
+   ```
+
+3. **Create Workflow UI Builder**:
+   - Implement a drag-and-drop interface for workflow steps
+   - Allow branching based on conditions
+   - Provide email, delay, and condition step types
+   - Implement workflow testing functionality
+
+### 7.3 Email Template Builder
+
+Let's create a drag-and-drop email template builder:
+
+1. **Frontend Template Builder Component**:
+   ```jsx
+   // src/components/templates/TemplateBuilder.js
+   import React, { useState } from 'react';
+   import { Row, Col, Card, Button } from 'react-bootstrap';
+   import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+   import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+   import { 
+     faHeading, 
+     faImage, 
+     faAlignLeft, 
+     faLink, 
+     faDivider,
+     faColumns,
+     faTrash,
+     faEdit
+   } from '@fortawesome/free-solid-svg-icons';
+   
+   const TemplateBuilder = ({ initialContent, onChange }) => {
+     const [blocks, setBlocks] = useState(initialContent || []);
+     const [selectedBlock, setSelectedBlock] = useState(null);
+     
+     const blockTypes = [
+       { id: 'heading', name: 'Heading', icon: faHeading },
+       { id: 'text', name: 'Text', icon: faAlignLeft },
+       { id: 'image', name: 'Image', icon: faImage },
+       { id: 'button', name: 'Button', icon: faLink },
+       { id: 'divider', name: 'Divider', icon: faDivider },
+       { id: 'columns', name: '2 Columns', icon: faColumns }
+     ];
+     
+     const addBlock = (type) => {
+       const newBlock = createDefaultBlock(type);
+       const newBlocks = [...blocks, newBlock];
+       setBlocks(newBlocks);
+       setSelectedBlock(newBlock.id);
+       onChange(newBlocks);
+     };
+     
+     const removeBlock = (id) => {
+       const newBlocks = blocks.filter(block => block.id !== id);
+       setBlocks(newBlocks);
+       setSelectedBlock(null);
+       onChange(newBlocks);
+     };
+     
+     const updateBlock = (id, data) => {
+       const newBlocks = blocks.map(block => 
+         block.id === id ? { ...block, ...data } : block
+       );
+       setBlocks(newBlocks);
+       onChange(newBlocks);
+     };
+     
+     const handleDragEnd = (result) => {
+       if (!result.destination) return;
+       
+       const items = Array.from(blocks);
+       const [reorderedItem] = items.splice(result.source.index, 1);
+       items.splice(result.destination.index, 0, reorderedItem);
+       
+       setBlocks(items);
+       onChange(items);
+     };
+     
+     return (
+       <Row>
+         <Col md={3}>
+           <Card className="block-palette">
+             <Card.Header>Add Content</Card.Header>
+             <Card.Body>
+               {blockTypes.map(type => (
+                 <Button 
+                   key={type.id}
+                   variant="outline-secondary"
+                   className="block-type-button"
+                   onClick={() => addBlock(type.id)}
+                 >
+                   <FontAwesomeIcon icon={type.icon} className="me-2" />
+                   {type.name}
+                 </Button>
+               ))}
+             </Card.Body>
+           </Card>
+         </Col>
+         <Col md={6}>
+           <Card className="template-canvas">
+             <Card.Header>Email Content</Card.Header>
+             <Card.Body>
+               <DragDropContext onDragEnd={handleDragEnd}>
+                 <Droppable droppableId="blocks">
+                   {(provided) => (
+                     <div
+                       {...provided.droppableProps}
+                       ref={provided.innerRef}
+                       className="blocks-container"
+                     >
+                       {blocks.map((block, index) => (
+                         <Draggable key={block.id} draggableId={block.id} index={index}>
+                           {(provided) => (
+                             <div
+                               ref={provided.innerRef}
+                               {...provided.draggableProps}
+                               {...provided.dragHandleProps}
+                               className={`block ${selectedBlock === block.id ? 'selected' : ''}`}
+                               onClick={() => setSelectedBlock(block.id)}
+                             >
+                               <div className="block-content">
+                                 {renderBlockPreview(block)}
+                               </div>
+                               <div className="block-actions">
+                                 <Button 
+                                   variant="link" 
+                                   size="sm"
+                                   onClick={() => setSelectedBlock(block.id)}
+                                 >
+                                   <FontAwesomeIcon icon={faEdit} />
+                                 </Button>
+                                 <Button 
+                                   variant="link" 
+                                   size="sm"
+                                   onClick={() => removeBlock(block.id)}
+                                 >
+                                   <FontAwesomeIcon icon={faTrash} />
+                                 </Button>
+                               </div>
+                             </div>
+                           )}
+                         </Draggable>
+                       ))}
+                       {provided.placeholder}
+                     </div>
+                   )}
+                 </Droppable>
+               </DragDropContext>
+               
+               {blocks.length === 0 && (
+                 <div className="empty-canvas">
+                   <p>Drag and drop content blocks here</p>
+                 </div>
+               )}
+             </Card.Body>
+           </Card>
+         </Col>
+         <Col md={3}>
+           <Card className="block-editor">
+             <Card.Header>Edit Block</Card.Header>
+             <Card.Body>
+               {selectedBlock ? (
+                 <BlockEditor
+                   block={blocks.find(b => b.id === selectedBlock)}
+                   onChange={(data) => updateBlock(selectedBlock, data)}
+                 />
+               ) : (
+                 <p className="text-muted">Select a block to edit its properties</p>
+               )}
+             </Card.Body>
+           </Card>
+         </Col>
+       </Row>
+     );
+   };
+   
+   // Helper component for editing block properties
+   const BlockEditor = ({ block, onChange }) => {
+     // Render different edit forms based on block type
+     switch (block.type) {
+       case 'heading':
+         return (
+           <HeadingEditor block={block} onChange={onChange} />
+         );
+       case 'text':
+         return (
+           <TextEditor block={block} onChange={onChange} />
+         );
+       // Additional editors for other block types
+       default:
+         return <p>No editor available for this block type</p>;
+     }
+   };
+   
+   // Implementation of block-specific editors and renderBlockPreview function...
+   ```
+
+2. **Generate HTML from Template Blocks**:
+   ```javascript
+   // utils/templateRenderer.js
+   const generateHtmlFromBlocks = (blocks) => {
+     let html = '';
+     
+     blocks.forEach(block => {
+       switch (block.type) {
+         case 'heading':
+           html += `<h${block.level} style="color: ${block.color}; text-align: ${block.alignment}; font-size: ${getFontSize(block.level)};">${block.content}</h${block.level}>`;
+           break;
+           
+         case 'text':
+           html += `<p style="color: ${block.color}; text-align: ${block.alignment};">${block.content}</p>`;
+           break;
+           
+         case 'image':
+           html += `<div style="text-align: ${block.alignment};">
+             <img src="${block.src}" alt="${block.alt}" style="max-width: 100%; width: ${block.width};" />
+           </div>`;
+           break;
+           
+         case 'button':
+           html += `<div style="text-align: ${block.alignment}; margin: 20px 0;">
+             <a href="${block.url}" style="background-color: ${block.backgroundColor}; color: ${block.textColor}; padding: 10px 20px; border-radius: ${block.borderRadius}px; text-decoration: none; display: inline-block;">${block.label}</a>
+           </div>`;
+           break;
+           
+         case 'divider':
+           html += `<hr style="border-top: ${block.thickness}px ${block.style} ${block.color}; margin: 20px 0;" />`;
+           break;
+           
+         case 'columns':
+           html += `<table width="100%" cellspacing="0" cellpadding="0">
+             <tr>
+               <td style="width: 50%; padding-right: 10px; vertical-align: top;">
+                 ${block.leftColumn}
+               </td>
+               <td style="width: 50%; padding-left: 10px; vertical-align: top;">
+                 ${block.rightColumn}
+               </td>
+             </tr>
+           </table>`;
+           break;
+       }
+     });
+     
+     // Wrap with responsive email container
+     return `
+       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+         ${html}
+       </div>
+     `;
+   };
+   ```
+
+### 7.4 Advanced Analytics and Reporting
+
+Enhance your analytics with more advanced reporting features:
+
+1. **Implement Geographic Analytics**:
+   - Track IP addresses during email opens
+   - Use a geolocation service to map IPs to locations
+   - Create a heat map visualization of subscriber locations
+
+2. **Device and Client Tracking**:
+   - Parse user agent strings to identify devices and email clients
+   - Create charts showing email client distribution
+   - Track desktop vs. mobile open rates
+
+3. **Best Send Time Analysis**:
+   - Track open times to identify patterns
+   - Generate recommendations for optimal send times
+   - Implement automatic send time optimization
+
+4. **Advanced Analytics Endpoints**:
+   ```javascript
+   // controllers/analyticsController.js (additional functions)
+   exports.getGeoAnalytics = async (req, res) => {
+     try {
+       const campaignId = req.params.id;
+       
+       // Get all open events with IP information
+       const events = await Analytics.find({
+         campaignId,
+         event: 'opened',
+         'metadata.ip': { $exists: true }
+       });
+       
+       // Group by country and region
+       const locationData = {};
+       
+       for (const event of events) {
+         const ip = event.metadata.ip;
+         const location = await getLocationFromIp(ip);
+         
+         if (location.country) {
+           if (!locationData[location.country]) {
+             locationData[location.country] = {
+               count: 0,
+               regions: {}
+             };
+           }
+           
+           locationData[location.country].count++;
+           
+           if (location.region) {
+             if (!locationData[location.country].regions[location.region]) {
+               locationData[location.country].regions[location.region] = 0;
+             }
+             
+             locationData[location.country].regions[location.region]++;
+           }
+         }
+       }
+       
+       res.status(200).json({
+         success: true,
+         data: {
+           locations: Object.entries(locationData).map(([country, data]) => ({
+             country,
+             count: data.count,
+             regions: Object.entries(data.regions).map(([region, count]) => ({
+               region,
+               count
+             }))
+           })),
+           total: events.length
+         }
+       });
+     } catch (error) {
+       console.error('Error fetching geo analytics:', error);
+       res.status(500).json({
+         success: false,
+         message: 'Server Error'
+       });
+     }
+   };
+   
+   exports.getDeviceAnalytics = async (req, res) => {
+     try {
+       const campaignId = req.params.id;
+       
+       // Get all open events with user agent information
+       const events = await Analytics.find({
+         campaignId,
+         event: 'opened',
+         'metadata.userAgent': { $exists: true }
+       });
+       
+       // Parse user agents and group by device type and client
+       const deviceData = {
+         deviceTypes: {},
+         clients: {},
+         operatingSystems: {}
+       };
+       
+       for (const event of events) {
+         const userAgent = event.metadata.userAgent;
+         const parsed = parseUserAgent(userAgent);
+         
+         // Count device types
+         if (parsed.deviceType) {
+           deviceData.deviceTypes[parsed.deviceType] = 
+             (deviceData.deviceTypes[parsed.deviceType] || 0) + 1;
+         }
+         
+         // Count email clients
+         if (parsed.client) {
+           deviceData.clients[parsed.client] = 
+             (deviceData.clients[parsed.client] || 0) + 1;
+         }
+         
+         // Count operating systems
+         if (parsed.os) {
+           deviceData.operatingSystems[parsed.os] = 
+             (deviceData.operatingSystems[parsed.os] || 0) + 1;
+         }
+       }
+       
+       // Format data for charts
+       const formatChartData = (dataObj) => {
+         return Object.entries(dataObj).map(([name, value]) => ({
+           name,
+           value
+         }));
+       };
+       
+       res.status(200).json({
+         success: true,
+         data: {
+           deviceTypes: formatChartData(deviceData.deviceTypes),
+           clients: formatChartData(deviceData.clients),
+           operatingSystems: formatChartData(deviceData.operatingSystems),
+           total: events.length
+         }
+       });
+     } catch (error) {
+       console.error('Error fetching device analytics:', error);
+       res.status(500).json({
+         success: false,
+         message: 'Server Error'
+       });
+     }
+   };
+   ```
+
+## Part 8: Best Practices and Code Quality
+
+### 8.1 Error Handling and Logging
+
+Implement comprehensive error handling and logging:
+
+```javascript
+// middleware/errorHandler.js
+const { createLogger, format, transports } = require('winston');
+const { combine, timestamp, printf } = format;
+
+// Create logger
+const logger = createLogger({
+  level: 'info',
+  format: combine(
+    timestamp(),
+    printf(({ level, message, timestamp, ...rest }) => {
+      return `${timestamp} ${level}: ${message} ${Object.keys(rest).length ? JSON.stringify(rest) : ''}`;
+    })
+  ),
+  transports: [
+    new transports.Console(),
+    new transports.File({ filename: 'error.log', level: 'error' }),
+    new transports.File({ filename: 'combined.log' })
+  ]
+});
+
+// Error handling middleware
+const errorHandler = (err, req, res, next) => {
+  // Log error
+  logger.error(err.message, {
+    url: req.originalUrl,
+    method: req.method,
+    ip: req.ip,
+    stack: err.stack
+  });
+
+  // Determine status code
+  const statusCode = err.statusCode || 500;
+
+  // Send error response
+  res.status(statusCode).json({
+    success: false,
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+};
+
+// Custom error class
+class AppError extends Error {
+  constructor(message, statusCode) {
+    super(message);
+    this.statusCode = statusCode;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+module.exports = {
+  errorHandler,
+  AppError,
+  logger
+};
+```
+
+### 8.2 API Documentation with Swagger
+
+Document your API endpoints using Swagger:
+
+```javascript
+// swagger.js
+const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+
+const swaggerOptions = {
+  swaggerDefinition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Bulk Email Tool API',
+      version: '1.0.0',
+      description: 'API documentation for Bulk Email Tool',
+      contact: {
+        name: 'API Support'
+      },
+      servers: [
+        {
+          url: 'http://localhost:5000',
+          description: 'Development server'
+        }
+      ]
+    },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
+      }
+    },
+    security: [
+      {
+        bearerAuth: []
+      }
+    ]
+  },
+  apis: ['./routes/*.js'] // Path to API route files
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+
+module.exports = (app) => {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+};
+```
+
+Add Swagger annotations to your route files:
+
+```javascript
+/**
+ * @swagger
+ * /api/campaigns:
+ *   get:
+ *     summary: Get all campaigns for the current user
+ *     tags: [Campaigns]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: A list of campaigns
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Campaign'
+ */
+```
+
+### 8.3 Unit and Integration Testing
+
+Implement tests for your application:
+
+```javascript
+// tests/auth.test.js
+const request = require('supertest');
+const mongoose = require('mongoose');
+const app = require('../app');
+const User = require('../models/User');
+
+describe('Auth API', () => {
+  beforeAll(async () => {
+    // Connect to test database
+    await mongoose.connect(process.env.TEST_MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+  });
+
+  afterAll(async () => {
+    // Clean up database and close connection
+    await User.deleteMany();
+    await mongoose.connection.close();
+  });
+
+  describe('POST /api/auth/register', () => {
+    it('should register a new user', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({
+          name: 'Test User',
+          email: 'test@example.com',
+          password: 'password123'
+        });
+      
+      expect(res.statusCode).toEqual(201);
+      expect(res.body).toHaveProperty('success', true);
+      expect(res.body).toHaveProperty('token');
+    });
+
+    it('should return 400 if user already exists', async () => {
+      // Try to register the same user again
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({
+          name: 'Test User',
+          email: 'test@example.com',
+          password: 'password123'
+        });
+      
+      expect(res.statusCode).toEqual(400);
+      expect(res.body).toHaveProperty('success', false);
+      expect(res.body.message).toContain('User already exists');
+    });
+  });
+
+  describe('POST /api/auth/login', () => {
+    it('should login an existing user', async () => {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'test@example.com',
+          password: 'password123'
+        });
+      
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty('success', true);
+      expect(res.body).toHaveProperty('token');
+    });
+
+    it('should return 401 for invalid credentials', async () => {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'test@example.com',
+          password: 'wrongpassword'
+        });
+      
+      expect(res.statusCode).toEqual(401);
+      expect(res.body).toHaveProperty('success', false);
+      expect(res.body.message).toContain('Invalid credentials');
+    });
+  });
+});
+```
+
+## Part 9: Project Summary and Next Steps
+
+### 9.1 Summary of What We've Built
+
+In this comprehensive guide, we've built a fully functional bulk email tool with the following features:
+
+1. **Authentication System**
+   - User registration and login
+   - JWT-based authentication
+   - Protected routes
+
+2. **Campaign Management**
+   - Campaign creation and editing
+   - Email composition with HTML editor
+   - Campaign scheduling and sending
+
+3. **Template Management**
+   - Template creation and editing
+   - Template library
+   - Drag-and-drop template builder
+
+4. **Recipient Management**
+   - Contact list creation and management
+   - CSV import functionality
+   - Recipient segmentation
+
+5. **Analytics and Tracking**
+   - Email open and click tracking
+   - Performance analytics dashboard
+   - Detailed campaign reports
+
+6. **Advanced Features**
+   - A/B testing
+   - Email automation workflows
+   - Geographic and device analytics
+
+7. **Deployment and Monitoring**
+   - Frontend deployment to Netlify
+   - Backend deployment to Render
+   - Performance monitoring and logging
+
+### 9.2 Next Steps for Further Enhancements
+
+Here are some areas you might want to explore to further enhance your bulk email tool:
+
+1. **Spam Score Checker**
+   - Implement a system to analyze email content for spam triggers
+   - Provide recommendations to improve deliver## Part 9: Project Summary and Next Steps (Continued)
+
+### 9.2 Next Steps for Further Enhancements (Continued)
+
+1. **Spam Score Checker**
+   - Implement a system to analyze email content for spam triggers
+   - Provide recommendations to improve deliverability
+   - Integrate with external spam testing APIs (like SpamAssassin or Mail-Tester)
+   - Add preview testing across different email clients
+
+2. **Advanced Segmentation**
+   - Implement behavioral segmentation based on past interactions
+   - Create dynamic segments that update automatically based on criteria
+   - Allow complex segment rules with AND/OR logic
+   - Add RFM (Recency, Frequency, Monetary) analysis for e-commerce integrations
+
+3. **CRM Integration**
+   - Build connectors for popular CRM systems like Salesforce, HubSpot, or Zoho
+   - Implement two-way synchronization of contact data
+   - Allow campaign triggers based on CRM events
+   - Enable detailed activity logging in the CRM
+
+4. **Landing Page Builder**
+   - Create a companion landing page builder for email campaigns
+   - Implement form capture for newsletter signups
+   - Add A/B testing capabilities for landing pages
+   - Integrate analytics for conversion tracking
+
+5. **Advanced Personalization**
+   - Implement dynamic content blocks based on recipient data
+   - Create personalized product recommendations
+   - Add conditional content logic (show/hide sections based on user attributes)
+   - Implement personalized sending times based on past engagement
+
+6. **Multi-User Collaboration**
+   - Add team workspaces with role-based permissions
+   - Implement approval workflows for campaigns
+   - Create commenting and feedback systems
+   - Add activity logs and audit trails
+
+7. **Compliance Tools**
+   - Enhance GDPR compliance features
+   - Implement double opt-in and consent management
+   - Add automatic unsubscribe link management
+   - Create compliance reporting for regulations like CAN-SPAM and CCPA
+
+## Part 10: Conclusion - The Journey from Zero to Expert
+
+### 10.1 Reflecting on Your Learning Path
+
+Building this bulk email tool has taken you on a comprehensive journey through full-stack development. You've progressed from understanding basic concepts to implementing advanced features using modern web technologies. This project has helped you develop expertise in several key areas:
+
+1. **Frontend Development with React**
+   - Component-based architecture
+   - State management with Context API
+   - Form handling with Formik
+   - Interactive UI with React Bootstrap
+   - Data visualization with chart libraries
+
+2. **Backend Development with Node.js**
+   - RESTful API design
+   - Express middleware patterns
+   - Authentication and authorization
+   - Database operations with Mongoose
+   - File handling and parsing
+
+3. **Database Management with MongoDB**
+   - Schema design
+   - Indexing and querying
+   - Relationship modeling in a NoSQL context
+   - Data aggregation and analytics
+
+4. **Software Architecture**
+   - MVC pattern implementation
+   - Service-oriented architecture
+   - Separation of concerns
+   - Scalable and maintainable code structure
+
+5. **DevOps and Deployment**
+   - CI/CD workflows
+   - Cloud deployment
+   - Environment configuration
+   - Monitoring and logging
+
+### 10.2 Practical Applications and Business Value
+
+The bulk email tool you've built isn't just a learning exercise—it has real business value and practical applications:
+
+1. **Marketing Campaigns**
+   - Businesses can use the tool to create and manage email marketing campaigns
+   - The analytics help optimize campaign performance
+   - A/B testing allows refinement of messaging for better results
+
+2. **Customer Engagement**
+   - Automated workflows enable timely communication with customers
+   - Personalization features create more relevant content
+   - Segmentation ensures messages reach the right audience
+
+3. **Business Operations**
+   - Organizations can send operational notifications
+   - Internal newsletters can be managed and tracked
+   - Onboarding sequences can be automated
+
+4. **Cost Effectiveness**
+   - Provides an alternative to expensive commercial email marketing tools
+   - Customizable to meet specific business needs
+   - Scales with the business without increasing per-user costs
+
+### 10.3 Final Coding Best Practices
+
+As you continue to enhance and maintain this project, keep these coding best practices in mind:
+
+1. **Code Maintainability**
+   - Follow consistent naming conventions
+   - Use meaningful variable and function names
+   - Break complex functions into smaller, single-purpose functions
+   - Document your code comprehensively
+
+2. **Performance Optimization**
+   - Implement caching for frequently accessed data
+   - Use pagination for large data sets
+   - Optimize database queries with proper indexing
+   - Implement rate limiting for API endpoints
+
+3. **Security Best Practices**
+   - Regularly update dependencies to patch vulnerabilities
+   - Validate and sanitize all user inputs
+   - Implement proper CORS policies
+   - Use environment variables for sensitive information
+   - Conduct regular security audits
+
+4. **Testing Strategies**
+   - Write unit tests for critical business logic
+   - Implement integration tests for API endpoints
+   - Set up end-to-end tests for critical user flows
+   - Use test-driven development for new features
+
+5. **Continuous Improvement**
+   - Gather user feedback and prioritize enhancements
+   - Analyze usage patterns to identify optimization opportunities
+   - Stay current with industry best practices
+   - Refactor code regularly to improve quality
+
+### 10.4 Closing Thoughts and Encouragement
+
+Building a complex application like this bulk email tool is a significant achievement. You've created something valuable that solves real business problems while also developing your technical skills across the full stack.
+
+Remember that software development is an iterative process. Your first version doesn't need to include every feature mentioned in this guide. Start with the core functionality, get feedback from users, and continuously improve your application based on real-world usage.
+
+As you continue to develop this project, focus on solving specific problems and adding features that provide clear value to users. This approach will help you avoid feature bloat and ensure that your application remains focused and useful.
+
+The skills you've gained through this project are transferable to many other software development contexts. The patterns and practices you've learned—from state management to API design to database modeling—will serve you well in future projects.
+
+Keep learning, keep building, and keep refining your craft. Every line of code you write makes you a better developer, and every problem you solve deepens your understanding of software engineering principles.
+
+You now have the foundation to continue growing as a full-stack developer, equipped with the knowledge to create sophisticated web applications from scratch. Congratulations on your achievement, and best of luck with your future development endeavors!
