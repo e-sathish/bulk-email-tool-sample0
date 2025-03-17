@@ -1,0 +1,1125 @@
+<think>Okay, so the user wants a simpler version of the bulk email tool with:
+1. JavaScript instead of TypeScript
+2. No JWT authentication (simplify auth)
+3. Front-end: React.js
+4. Back-end: Node.js
+5. Database: MongoDB
+6. Should include charts for analytics
+7. Use Bootstrap or Material CSS
+8. Needs to be deployed (frontend on Netlify, backend on Render)
+
+I'll create a simplified plan that they can implement quickly, focusing on the core functionality of sending bulk emails, with minimal auth and good UI.</think># Simple Bulk Email Tool with JavaScript
+
+Let's create a streamlined version of the bulk email tool that's quick to implement while meeting your requirements. I'll break this down into simple steps you can follow.
+
+## Project Overview
+
+A simplified bulk email tool that lets you:
+- Create email campaigns
+- Upload recipient lists
+- Send bulk emails
+- Track basic metrics (opens, clicks)
+- View analytics with charts
+
+## Quick Setup Guide
+
+### Backend (Node.js + Express + MongoDB)
+
+#### 1. Project Setup
+```bash
+# Create project folder
+mkdir bulk-email-tool-backend
+cd bulk-email-tool-backend
+
+# Initialize npm project
+npm init -y
+
+# Install core dependencies
+npm install express mongoose dotenv cors nodemailer
+
+# Create basic folder structure
+mkdir models routes controllers config public
+```
+
+#### 2. Create Basic Files
+
+**`server.js`** (Main server file)
+```javascript
+const express = require('express');
+const cors = require('cors');
+const mongoose = require('mongoose');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// Routes
+app.use('/api/campaigns', require('./routes/campaignRoutes'));
+app.use('/api/tracking', require('./routes/trackingRoutes'));
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+```
+
+**`.env`**
+```
+PORT=5000
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/bulkemails
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+```
+
+#### 3. Create Models
+
+**`models/Campaign.js`**
+```javascript
+const mongoose = require('mongoose');
+
+const recipientSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true
+  },
+  name: String,
+  status: {
+    type: String,
+    enum: ['pending', 'sent', 'opened', 'clicked', 'failed'],
+    default: 'pending'
+  },
+  openedAt: Date,
+  clickedAt: Date
+});
+
+const campaignSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  subject: {
+    type: String,
+    required: true
+  },
+  body: {
+    type: String,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['draft', 'sending', 'sent', 'failed'],
+    default: 'draft'
+  },
+  recipients: [recipientSchema],
+  sentCount: {
+    type: Number,
+    default: 0
+  },
+  openCount: {
+    type: Number,
+    default: 0
+  },
+  clickCount: {
+    type: Number,
+    default: 0
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+module.exports = mongoose.model('Campaign', campaignSchema);
+```
+
+#### 4. Create Routes and Controllers
+
+**`routes/campaignRoutes.js`**
+```javascript
+const express = require('express');
+const router = express.Router();
+const { 
+  getCampaigns, 
+  getCampaign, 
+  createCampaign, 
+  updateCampaign, 
+  deleteCampaign,
+  sendCampaign
+} = require('../controllers/campaignController');
+
+router.get('/', getCampaigns);
+router.get('/:id', getCampaign);
+router.post('/', createCampaign);
+router.put('/:id', updateCampaign);
+router.delete('/:id', deleteCampaign);
+router.post('/:id/send', sendCampaign);
+
+module.exports = router;
+```
+
+**`controllers/campaignController.js`**
+```javascript
+const Campaign = require('../models/Campaign');
+const sendEmail = require('../utils/emailSender');
+
+// Get all campaigns
+exports.getCampaigns = async (req, res) => {
+  try {
+    const campaigns = await Campaign.find();
+    res.json(campaigns);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Get a specific campaign
+exports.getCampaign = async (req, res) => {
+  try {
+    const campaign = await Campaign.findById(req.params.id);
+    if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
+    res.json(campaign);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Create a campaign
+exports.createCampaign = async (req, res) => {
+  try {
+    const campaign = new Campaign(req.body);
+    const newCampaign = await campaign.save();
+    res.status(201).json(newCampaign);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+// Update a campaign
+exports.updateCampaign = async (req, res) => {
+  try {
+    const campaign = await Campaign.findByIdAndUpdate(
+      req.params.id, 
+      req.body,
+      { new: true }
+    );
+    if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
+    res.json(campaign);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+// Delete a campaign
+exports.deleteCampaign = async (req, res) => {
+  try {
+    const campaign = await Campaign.findByIdAndDelete(req.params.id);
+    if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
+    res.json({ message: 'Campaign deleted' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Send a campaign
+exports.sendCampaign = async (req, res) => {
+  try {
+    const campaign = await Campaign.findById(req.params.id);
+    if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
+    
+    campaign.status = 'sending';
+    await campaign.save();
+    
+    // Send emails in the background
+    process.nextTick(async () => {
+      try {
+        for (const recipient of campaign.recipients) {
+          if (recipient.status === 'pending') {
+            try {
+              await sendEmail({
+                to: recipient.email,
+                subject: campaign.subject,
+                html: campaign.body + 
+                  `<img src="${process.env.BACKEND_URL}/api/tracking/open/${campaign._id}/${recipient._id}" width="1" height="1" />`,
+                campaignId: campaign._id,
+                recipientId: recipient._id
+              });
+              
+              recipient.status = 'sent';
+              campaign.sentCount++;
+            } catch (err) {
+              recipient.status = 'failed';
+              console.error(`Failed to send to ${recipient.email}:`, err);
+            }
+          }
+        }
+        
+        campaign.status = 'sent';
+        await campaign.save();
+      } catch (err) {
+        console.error('Error in background sending:', err);
+      }
+    });
+    
+    res.json({ message: 'Campaign is being sent' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+```
+
+#### 5. Email Sending Utility
+
+**`utils/emailSender.js`**
+```javascript
+const nodemailer = require('nodemailer');
+
+// Create a transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+// Send email function
+const sendEmail = async ({ to, subject, html, text, campaignId, recipientId }) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to,
+    subject,
+    html,
+    text
+  };
+
+  return transporter.sendMail(mailOptions);
+};
+
+module.exports = sendEmail;
+```
+
+#### 6. Tracking Routes
+
+**`routes/trackingRoutes.js`**
+```javascript
+const express = require('express');
+const router = express.Router();
+const { trackOpen, trackClick } = require('../controllers/trackingController');
+
+router.get('/open/:campaignId/:recipientId', trackOpen);
+router.get('/click/:campaignId/:recipientId', trackClick);
+
+module.exports = router;
+```
+
+**`controllers/trackingController.js`**
+```javascript
+const Campaign = require('../models/Campaign');
+
+// Track email open
+exports.trackOpen = async (req, res) => {
+  try {
+    const { campaignId, recipientId } = req.params;
+    
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign) return res.status(404).send();
+    
+    const recipient = campaign.recipients.id(recipientId);
+    if (recipient && recipient.status === 'sent') {
+      recipient.status = 'opened';
+      recipient.openedAt = new Date();
+      campaign.openCount++;
+      await campaign.save();
+    }
+    
+    // Return a 1x1 transparent GIF
+    res.set('Content-Type', 'image/gif');
+    res.send(Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64'));
+  } catch (err) {
+    console.error('Error tracking open:', err);
+    res.status(500).send();
+  }
+};
+
+// Track email click
+exports.trackClick = async (req, res) => {
+  try {
+    const { campaignId, recipientId } = req.params;
+    const { url } = req.query;
+    
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign) return res.redirect(url || '/');
+    
+    const recipient = campaign.recipients.id(recipientId);
+    if (recipient && (recipient.status === 'sent' || recipient.status === 'opened')) {
+      recipient.status = 'clicked';
+      recipient.clickedAt = new Date();
+      campaign.clickCount++;
+      await campaign.save();
+    }
+    
+    // Redirect to the intended URL
+    res.redirect(url || '/');
+  } catch (err) {
+    console.error('Error tracking click:', err);
+    res.redirect(req.query.url || '/');
+  }
+};
+```
+
+### Frontend (React + Bootstrap)
+
+#### 1. Project Setup
+```bash
+# Create React app
+npx create-react-app bulk-email-tool-frontend
+
+# Install dependencies
+cd bulk-email-tool-frontend
+npm install axios react-router-dom bootstrap react-bootstrap recharts react-quill
+```
+
+#### 2. Update `App.js`
+
+```jsx
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './App.css';
+
+// Components
+import Navbar from './components/Navbar';
+import Dashboard from './pages/Dashboard';
+import CampaignList from './pages/CampaignList';
+import CampaignCreate from './pages/CampaignCreate';
+import CampaignDetails from './pages/CampaignDetails';
+
+function App() {
+  return (
+    <Router>
+      <Navbar />
+      <div className="container mt-4">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/campaigns" element={<CampaignList />} />
+          <Route path="/campaigns/create" element={<CampaignCreate />} />
+          <Route path="/campaigns/:id" element={<CampaignDetails />} />
+        </Routes>
+      </div>
+    </Router>
+  );
+}
+
+export default App;
+```
+
+#### 3. Create Components
+
+**`components/Navbar.js`**
+```jsx
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Navbar, Nav, Container } from 'react-bootstrap';
+
+const NavbarComponent = () => {
+  return (
+    <Navbar bg="dark" variant="dark" expand="lg">
+      <Container>
+        <Navbar.Brand as={Link} to="/">Bulk Email Tool</Navbar.Brand>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="ms-auto">
+            <Nav.Link as={Link} to="/">Dashboard</Nav.Link>
+            <Nav.Link as={Link} to="/campaigns">Campaigns</Nav.Link>
+            <Nav.Link as={Link} to="/campaigns/create">Create Campaign</Nav.Link>
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
+  );
+};
+
+export default NavbarComponent;
+```
+
+#### 4. Create Pages
+
+**`pages/Dashboard.js`**
+```jsx
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Card, Row, Col } from 'react-bootstrap';
+import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
+const Dashboard = () => {
+  const [stats, setStats] = useState({
+    totalCampaigns: 0,
+    totalSent: 0,
+    totalOpened: 0,
+    totalClicked: 0,
+    campaigns: []
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/campaigns`);
+        const campaigns = response.data;
+        
+        // Calculate stats
+        const totalSent = campaigns.reduce((acc, campaign) => acc + campaign.sentCount, 0);
+        const totalOpened = campaigns.reduce((acc, campaign) => acc + campaign.openCount, 0);
+        const totalClicked = campaigns.reduce((acc, campaign) => acc + campaign.clickCount, 0);
+        
+        setStats({
+          totalCampaigns: campaigns.length,
+          totalSent,
+          totalOpened,
+          totalClicked,
+          campaigns
+        });
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  // Data for pie chart
+  const pieData = [
+    { name: 'Sent', value: stats.totalSent - stats.totalOpened },
+    { name: 'Opened', value: stats.totalOpened - stats.totalClicked },
+    { name: 'Clicked', value: stats.totalClicked }
+  ];
+
+  // Data for bar chart
+  const barData = stats.campaigns.map(campaign => ({
+    name: campaign.name,
+    sent: campaign.sentCount,
+    opened: campaign.openCount,
+    clicked: campaign.clickCount
+  }));
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <Row className="mb-4">
+        <Col md={3}>
+          <Card className="text-center">
+            <Card.Body>
+              <Card.Title>{stats.totalCampaigns}</Card.Title>
+              <Card.Text>Total Campaigns</Card.Text>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
+          <Card className="text-center">
+            <Card.Body>
+              <Card.Title>{stats.totalSent}</Card.Title>
+              <Card.Text>Emails Sent</Card.Text>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
+          <Card className="text-center">
+            <Card.Body>
+              <Card.Title>{stats.totalOpened}</Card.Title>
+              <Card.Text>Emails Opened</Card.Text>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
+          <Card className="text-center">
+            <Card.Body>
+              <Card.Title>{stats.totalClicked}</Card.Title>
+              <Card.Text>Links Clicked</Card.Text>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      <Row>
+        <Col md={6}>
+          <Card>
+            <Card.Header>Email Performance</Card.Header>
+            <Card.Body>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  />
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={6}>
+          <Card>
+            <Card.Header>Campaign Performance</Card.Header>
+            <Card.Body>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={barData.slice(0, 5)} // Show only 5 most recent campaigns
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="sent" fill="#8884d8" />
+                  <Bar dataKey="opened" fill="#82ca9d" />
+                  <Bar dataKey="clicked" fill="#ffc658" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </div>
+  );
+};
+
+export default Dashboard;
+```
+
+**`pages/CampaignList.js`**
+```jsx
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { Table, Button, Badge } from 'react-bootstrap';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
+const CampaignList = () => {
+  const [campaigns, setCampaigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/campaigns`);
+        setCampaigns(response.data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching campaigns:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchCampaigns();
+  }, []);
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this campaign?')) {
+      try {
+        await axios.delete(`${API_URL}/campaigns/${id}`);
+        setCampaigns(campaigns.filter(campaign => campaign._id !== id));
+      } catch (error) {
+        console.error('Error deleting campaign:', error);
+      }
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'draft':
+        return <Badge bg="secondary">Draft</Badge>;
+      case 'sending':
+        return <Badge bg="warning">Sending</Badge>;
+      case 'sent':
+        return <Badge bg="success">Sent</Badge>;
+      case 'failed':
+        return <Badge bg="danger">Failed</Badge>;
+      default:
+        return <Badge bg="info">{status}</Badge>;
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center">Loading campaigns...</div>;
+  }
+
+  return (
+    <div>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1>Campaigns</h1>
+        <Button as={Link} to="/campaigns/create" variant="primary">Create Campaign</Button>
+      </div>
+      
+      {campaigns.length === 0 ? (
+        <div className="text-center mt-5">
+          <p>No campaigns found. Create your first campaign!</p>
+        </div>
+      ) : (
+        <Table striped bordered hover responsive>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Subject</th>
+              <th>Status</th>
+              <th>Recipients</th>
+              <th>Opened</th>
+              <th>Clicked</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {campaigns.map(campaign => (
+              <tr key={campaign._id}>
+                <td>{campaign.name}</td>
+                <td>{campaign.subject}</td>
+                <td>{getStatusBadge(campaign.status)}</td>
+                <td>{campaign.recipients.length}</td>
+                <td>{campaign.openCount}</td>
+                <td>{campaign.clickCount}</td>
+                <td>{new Date(campaign.createdAt).toLocaleDateString()}</td>
+                <td>
+                  <Button as={Link} to={`/campaigns/${campaign._id}`} variant="info" size="sm" className="me-2">View</Button>
+                  {campaign.status === 'draft' && (
+                    <>
+                      <Button as={Link} to={`/campaigns/${campaign._id}/edit`} variant="warning" size="sm" className="me-2">Edit</Button>
+                      <Button variant="danger" size="sm" onClick={() => handleDelete(campaign._id)}>Delete</Button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
+    </div>
+  );
+};
+
+export default CampaignList;
+```
+
+**`pages/CampaignCreate.js`**
+```jsx
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Form, Button, Card } from 'react-bootstrap';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
+const CampaignCreate = () => {
+  const navigate = useNavigate();
+  const [campaign, setCampaign] = useState({
+    name: '',
+    subject: '',
+    body: '',
+    recipients: []
+  });
+  const [csvFile, setCsvFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleChange = (e) => {
+    setCampaign({
+      ...campaign,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleBodyChange = (content) => {
+    setCampaign({
+      ...campaign,
+      body: content
+    });
+  };
+
+  const handleFileChange = (e) => {
+    setCsvFile(e.target.files[0]);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      // Parse CSV file to get recipients
+      if (csvFile) {
+        const recipients = await parseCSV(csvFile);
+        campaign.recipients = recipients;
+      }
+
+      const response = await axios.post(`${API_URL}/campaigns`, campaign);
+      setLoading(false);
+      navigate(`/campaigns/${response.data._id}`);
+    } catch (error) {
+      setLoading(false);
+      setError('Failed to create campaign. Please try again.');
+      console.error('Error creating campaign:', error);
+    }
+  };
+
+  const parseCSV = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        const lines = text.split('\n');
+        const headers = lines[0].split(',').map(header => header.trim());
+        
+        const emailIndex = headers.findIndex(header => 
+          header.toLowerCase() === 'email');
+        const nameIndex = headers.findIndex(header => 
+          header.toLowerCase() === 'name');
+        
+        if (emailIndex === -1) {
+          reject('CSV file must contain an email column');
+          return;
+        }
+        
+        const recipients = [];
+        for (let i = 1; i < lines.length; i++) {
+          if (!lines[i].trim()) continue;
+          
+          const values = lines[i].split(',').map(value => value.trim());
+          const recipient = {
+            email: values[emailIndex],
+            status: 'pending'
+          };
+          
+          if (nameIndex !== -1) {
+            recipient.name = values[nameIndex];
+          }
+          
+          recipients.push(recipient);
+        }
+        
+        resolve(recipients);
+      };
+      
+      reader.onerror = () => {
+        reject('Failed to read file');
+      };
+      
+      reader.readAsText(file);
+    });
+  };
+
+  return (
+    <div>
+      <h1>Create Campaign</h1>
+      
+      {error && <div className="alert alert-danger">{error}</div>}
+      
+      <Card>
+        <Card.Body>
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="mb-3">
+              <Form.Label>Campaign Name</Form.Label>
+              <Form.Control
+                type="text"
+                name="name"
+                value={campaign.name}
+                onChange={handleChange}
+                required
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Email Subject</Form.Label>
+              <Form.Control
+                type="text"
+                name="subject"
+                value={campaign.subject}
+                onChange={handleChange}
+                required
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-4">
+              <Form.Label>Email Content</Form.Label>
+              <ReactQuill
+                value={campaign.body}
+                onChange={handleBodyChange}
+                theme="snow"
+                style={{ height: '300px', marginBottom: '50px' }}
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Recipient List (CSV file with email, name columns)</Form.Label>
+              <Form.Control
+                type="file"
+                accept=".csv"
+                onChange={handleFileChange}
+                required
+              />
+              <Form.Text className="text-muted">
+                Upload a CSV file with at least an 'email' column. A 'name' column is optional.
+              </Form.Text>
+            </Form.Group>
+            
+            <Button variant="primary" type="submit" disabled={loading}>
+              {loading ? 'Creating...' : 'Create Campaign'}
+            </Button>
+          </Form>
+        </Card.Body>
+      </Card>
+    </div>
+  );
+};
+
+export default CampaignCreate;
+```
+
+**`pages/CampaignDetails.js`**
+```jsx
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import axios from 'axios';
+import { Card, Row, Col, Button, Table, Badge, Alert } from 'react-bootstrap';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
+const CampaignDetails = () => {
+  const { id } = useParams();
+  const [campaign, setCampaign] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [sendingStatus, setSendingStatus] = useState('');
+
+  useEffect(() => {
+    fetchCampaign();
+  }, [id]);
+
+  const fetchCampaign = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/campaigns/${id}`);
+      setCampaign(response.data);
+      setLoading(false);
+    } catch (error) {
+      setError('Failed to fetch campaign details');
+      setLoading(false);
+      console.error('Error fetching campaign:', error);
+    }
+  };
+
+  const handleSendCampaign = async () => {
+    if (window.confirm('Are you sure you want to send this campaign?')) {
+      try {
+        setSendingStatus('Sending campaign...');
+        await axios.post(`${API_URL}/campaigns/${id}/send`);
+        setSendingStatus('Campaign is being sent!');
+        fetchCampaign(); // Refresh campaign data
+      } catch (error) {
+        setSendingStatus('Failed to send campaign. Please try again.');
+        console.error('Error sending campaign:', error);
+      }
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center">Loading campaign details...</div>;
+  }
+
+  if (error) {
+    return <Alert variant="danger">{error}</Alert>;
+  }
+
+  if (!campaign) {
+    return <Alert variant="warning">Campaign not found</Alert>;
+  }
+
+  // Calculate statistics for pie chart
+  const totalSent = campaign.sentCount;
+  const totalOpened = campaign.openCount;
+  const totalClicked = campaign.clickCount;
+  
+  const pieData = [
+    { name: 'Sent (not opened)', value: totalSent - totalOpened, color: '#8884d8' },
+    { name: 'Opened (not clicked)', value: totalOpened - totalClicked, color: '#82ca9d' },
+    { name: 'Clicked', value: totalClicked, color: '#ffc658' }
+  ];
+
+  const getRecipientStatus = (status) => {
+    switch (status) {
+      case 'pending': return <Badge bg="secondary">Pending</Badge>;
+      case 'sent': return <Badge bg="primary">Sent</Badge>;
+      case 'opened': return <Badge bg="info">Opened</Badge>;
+      case 'clicked': return <Badge bg="success">Clicked</Badge>;
+      case 'failed': return <Badge bg="danger">Failed</Badge>;
+      default: return <Badge bg="light">{status}</Badge>;
+    }
+  };
+
+  return (
+    <div>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1>{campaign.name}</h1>
+        <div>
+          <Button as={Link} to="/campaigns" variant="secondary" className="me-2">Back to Campaigns</Button>
+          {campaign.status === 'draft' && (
+            <Button variant="success" onClick={handleSendCampaign}>Send Campaign</Button>
+          )}
+        </div>
+      </div>
+      
+      {sendingStatus && <Alert variant="info">{sendingStatus}</Alert>}
+      
+      <Row className="mb-4">
+        <Col md={6}>
+          <Card>
+            <Card.Header>Campaign Details</Card.Header>
+            <Card.Body>
+              <p><strong>Subject:</strong> {campaign.subject}</p>
+              <p><strong>Status:</strong> {campaign.status}</p>
+              <p><strong>Recipients:</strong> {campaign.recipients.length}</p>
+              <p><strong>Created:</strong> {new Date(campaign.createdAt).toLocaleString()}</p>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={6}>
+          <Card>
+            <Card.Header>Performance</Card.Header>
+            <Card.Body>
+              <Row>
+                <Col md={6}>
+                  <div className="text-center mb-3">
+                    <h5>Sent: {campaign.sentCount}</h5>
+                    <h5>Opened: {campaign.openCount}</h5>
+                    <h5>Clicked: {campaign.clickCount}</h5>
+                  </div>
+                </Col>
+                <Col md={6}>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={60}
+                        dataKey="value"
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => `${value} emails`} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </Col>
+              </Row>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+      
+      <Card className="mb-4">
+        <Card.Header>Email Content</Card.Header>
+        <Card.Body>
+          <div dangerouslySetInnerHTML={{ __html: campaign.body }} />
+        </Card.Body>
+      </Card>
+      
+      <Card>
+        <Card.Header>Recipients ({campaign.recipients.length})</Card.Header>
+        <Card.Body>
+          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            <Table striped bordered hover>
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Name</th>
+                  <th>Status</th>
+                  <th>Opened At</th>
+                  <th>Clicked At</th>
+                </tr>
+              </thead>
+              <tbody>
+                {campaign.recipients.map((recipient, index) => (
+                  <tr key={index}>
+                    <td>{recipient.email}</td>
+                    <td>{recipient.name || '-'}</td>
+                    <td>{getRecipientStatus(recipient.status)}</td>
+                    <td>{recipient.openedAt ? new Date(recipient.openedAt).toLocaleString() : '-'}</td>
+                    <td>{recipient.clickedAt ? new Date(recipient.clickedAt).toLocaleString() : '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        </Card.Body>
+      </Card>
+    </div>
+  );
+};
+
+export default CampaignDetails;
+```
+
+## Deployment Steps
+
+### Backend (Render)
+
+1. Push your code to GitHub
+2. Sign up on Render.com
+3. Create a new Web Service and link your GitHub repo
+4. Configure build and start commands:
+   - Build Command: `npm install`
+   - Start Command: `node server.js`
+5. Add environment variables (MongoDB URI, email credentials, etc.)
+6. Deploy the service
+
+### Frontend (Netlify)
+
+1. Push your code to GitHub
+2. Sign up on Netlify
+3. Import your GitHub repo
+4. Configure build settings:
+   - Build Command: `npm run build`
+   - Publish Directory: `build`
+5. Add environment variable `REACT_APP_API_URL` with your Render backend URL
+6. Deploy the site
+
+## Conclusion
+
+This simplified bulk email tool meets all your requirements while being quick to implement. It:
+
+- Uses JavaScript throughout (no TypeScript)
+- Implements React.js frontend with Bootstrap
+- Has a Node.js backend with Express and MongoDB
+- Includes charts and analytics
+- Eliminates complex authentication (easy to add later)
+- Focuses on the core functionality of creating and sending bulk emails
+
+You can easily extend this by adding:
+- User authentication (JWT)
+- More advanced email templates
+- Additional analytics
+- A/B testing capabilities
+
+This implementation prioritizes getting a functional product quickly that you can deploy to Netlify and Render with minimum complications.
