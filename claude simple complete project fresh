@@ -1,0 +1,3160 @@
+# Bulk Email Tool: A Complete MERN Stack Project
+
+I'll guide you through building a Bulk Email Tool from scratch, explaining each component in detail. This tool will allow users to create email campaigns, manage contact lists, and track email statistics.
+
+Let's approach this systematically:
+
+1. Project Overview and Planning
+2. Setting Up the Development Environment
+3. Backend Development with Node.js
+4. Frontend Development with React
+5. Database Integration with MongoDB Atlas
+6. Email Service Integration with SendGrid
+7. Testing and Deployment
+
+## 1. Project Overview and Planning
+
+### Project Description
+
+Our Bulk Email Tool will help users send mass emails to their contact lists while tracking engagement metrics like open rates and click-through rates. It will have:
+
+- User authentication (signup, login)
+- Contact list management
+- Email campaign creation and scheduling
+- Email templates
+- Analytics dashboard with charts
+- Mobile-responsive design
+
+### Architecture Overview
+
+We'll use the MERN stack:
+- MongoDB Atlas: Cloud database to store user data, contacts, and campaigns
+- Express.js: Backend framework running on Node.js
+- React.js: Frontend library with Material UI for the interface
+- Node.js: Runtime environment for our server
+
+### Technical Requirements
+
+- RESTful API for communication between frontend and backend
+- JWT for authentication
+- SendGrid for sending emails
+- Charts.js for displaying analytics
+- Material UI for design components
+- Responsive design for mobile compatibility
+
+## 2. Setting Up the Development Environment
+
+Let's start by setting up our development environment:
+
+### Project Structure
+
+```
+bulk-email-tool/
+├── client/                 # Frontend React application
+│   ├── public/
+│   └── src/
+│       ├── components/     # Reusable UI components
+│       ├── pages/          # Page components
+│       ├── context/        # React context for state management
+│       ├── utils/          # Utility functions
+│       └── App.js          # Main application component
+└── server/                 # Backend Node.js application
+    ├── config/             # Configuration files
+    ├── controllers/        # Request handlers
+    ├── models/             # Database models
+    ├── routes/             # API routes
+    └── server.js           # Entry point for the server
+```
+
+### Initialize the Project
+
+First, let's set up the project structure:
+
+```bash
+# Create project directory
+mkdir bulk-email-tool
+cd bulk-email-tool
+
+# Initialize the backend
+mkdir server
+cd server
+npm init -y
+
+# Install backend dependencies
+npm install express mongoose dotenv bcryptjs jsonwebtoken cors nodemailer @sendgrid/mail
+
+# Install development dependencies
+npm install nodemon --save-dev
+
+# Return to the root and create the frontend
+cd ..
+npx create-react-app client
+
+# Navigate to client and install frontend dependencies
+cd client
+npm install axios react-router-dom @mui/material @mui/icons-material @emotion/react @emotion/styled chart.js react-chartjs-2 formik yup
+```
+
+## 3. Backend Development with Node.js
+
+Let's start by developing the backend of our application.
+
+### Server Setup (server.js)
+
+```javascript
+// server/server.js
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const dotenv = require('dotenv');
+
+// Load environment variables
+dotenv.config();
+
+// Initialize Express app
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/contacts', require('./routes/contacts'));
+app.use('/api/campaigns', require('./routes/campaigns'));
+app.use('/api/templates', require('./routes/templates'));
+app.use('/api/analytics', require('./routes/analytics'));
+
+// Default route
+app.get('/', (req, res) => {
+  res.send('Bulk Email Tool API is running');
+});
+
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+```
+
+### Environment Variables (.env)
+
+```
+# server/.env
+PORT=5000
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/bulk-email-tool
+JWT_SECRET=your_jwt_secret_key
+SENDGRID_API_KEY=your_sendgrid_api_key
+```
+
+### MongoDB Models
+
+Let's create our database models:
+
+#### User Model
+
+```javascript
+// server/models/User.js
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+const UserSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  date: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+// Hash password before saving
+UserSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) {
+    return next();
+  }
+  
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Method to compare passwords
+UserSchema.methods.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+module.exports = mongoose.model('User', UserSchema);
+```
+
+#### Contact Model
+
+```javascript
+// server/models/Contact.js
+const mongoose = require('mongoose');
+
+const ContactSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    required: true
+  },
+  tags: [String],
+  date: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+module.exports = mongoose.model('Contact', ContactSchema);
+```
+
+#### Campaign Model
+
+```javascript
+// server/models/Campaign.js
+const mongoose = require('mongoose');
+
+const CampaignSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  subject: {
+    type: String,
+    required: true
+  },
+  content: {
+    type: String,
+    required: true
+  },
+  recipients: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Contact'
+  }],
+  tags: [String],
+  status: {
+    type: String,
+    enum: ['draft', 'scheduled', 'sent', 'cancelled'],
+    default: 'draft'
+  },
+  scheduledDate: {
+    type: Date
+  },
+  sentDate: {
+    type: Date
+  },
+  openCount: {
+    type: Number,
+    default: 0
+  },
+  clickCount: {
+    type: Number,
+    default: 0
+  },
+  date: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+module.exports = mongoose.model('Campaign', CampaignSchema);
+```
+
+### API Routes and Controllers
+
+#### Authentication Routes
+
+```javascript
+// server/routes/auth.js
+const express = require('express');
+const router = express.Router();
+const authController = require('../controllers/authController');
+
+// Register a new user
+router.post('/register', authController.register);
+
+// Login user
+router.post('/login', authController.login);
+
+module.exports = router;
+```
+
+#### Authentication Controller
+
+```javascript
+// server/controllers/authController.js
+const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+
+// Register a new user
+exports.register = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Check if user already exists
+    let user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    // Create new user
+    user = new User({
+      name,
+      email,
+      password
+    });
+
+    await user.save();
+
+    // Create JWT token
+    const payload = {
+      user: {
+        id: user.id
+      }
+    };
+
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' },
+      (err, token) => {
+        if (err) throw err;
+        res.json({ token });
+      }
+    );
+  } catch (error) {
+    console.error('Error in register:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Login user
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Check password
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Create JWT token
+    const payload = {
+      user: {
+        id: user.id
+      }
+    };
+
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' },
+      (err, token) => {
+        if (err) throw err;
+        res.json({ token });
+      }
+    );
+  } catch (error) {
+    console.error('Error in login:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+```
+
+#### Authentication Middleware
+
+```javascript
+// server/middleware/auth.js
+const jwt = require('jsonwebtoken');
+
+module.exports = (req, res, next) => {
+  // Get token from header
+  const token = req.header('x-auth-token');
+
+  // Check if no token
+  if (!token) {
+    return res.status(401).json({ message: 'No token, authorization denied' });
+  }
+
+  try {
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Add user from payload
+    req.user = decoded.user;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: 'Token is not valid' });
+  }
+};
+```
+
+#### Contact Routes
+
+```javascript
+// server/routes/contacts.js
+const express = require('express');
+const router = express.Router();
+const contactController = require('../controllers/contactController');
+const auth = require('../middleware/auth');
+
+// Get all contacts for a user
+router.get('/', auth, contactController.getContacts);
+
+// Add a new contact
+router.post('/', auth, contactController.addContact);
+
+// Update a contact
+router.put('/:id', auth, contactController.updateContact);
+
+// Delete a contact
+router.delete('/:id', auth, contactController.deleteContact);
+
+module.exports = router;
+```
+
+#### Contact Controller
+
+```javascript
+// server/controllers/contactController.js
+const Contact = require('../models/Contact');
+
+// Get all contacts for a user
+exports.getContacts = async (req, res) => {
+  try {
+    const contacts = await Contact.find({ user: req.user.id }).sort({ date: -1 });
+    res.json(contacts);
+  } catch (error) {
+    console.error('Error in getContacts:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Add a new contact
+exports.addContact = async (req, res) => {
+  try {
+    const { name, email, tags } = req.body;
+
+    // Create new contact
+    const newContact = new Contact({
+      user: req.user.id,
+      name,
+      email,
+      tags
+    });
+
+    const contact = await newContact.save();
+    res.json(contact);
+  } catch (error) {
+    console.error('Error in addContact:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Update a contact
+exports.updateContact = async (req, res) => {
+  try {
+    const { name, email, tags } = req.body;
+
+    // Build contact object
+    const contactFields = {};
+    if (name) contactFields.name = name;
+    if (email) contactFields.email = email;
+    if (tags) contactFields.tags = tags;
+
+    // Find contact and check ownership
+    let contact = await Contact.findById(req.params.id);
+    if (!contact) return res.status(404).json({ message: 'Contact not found' });
+    if (contact.user.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
+
+    // Update contact
+    contact = await Contact.findByIdAndUpdate(
+      req.params.id,
+      { $set: contactFields },
+      { new: true }
+    );
+
+    res.json(contact);
+  } catch (error) {
+    console.error('Error in updateContact:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Delete a contact
+exports.deleteContact = async (req, res) => {
+  try {
+    // Find contact and check ownership
+    const contact = await Contact.findById(req.params.id);
+    if (!contact) return res.status(404).json({ message: 'Contact not found' });
+    if (contact.user.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
+
+    // Delete contact
+    await Contact.findByIdAndRemove(req.params.id);
+    res.json({ message: 'Contact removed' });
+  } catch (error) {
+    console.error('Error in deleteContact:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+```
+
+#### Campaign Routes and Controller
+
+```javascript
+// server/routes/campaigns.js
+const express = require('express');
+const router = express.Router();
+const campaignController = require('../controllers/campaignController');
+const auth = require('../middleware/auth');
+
+// Get all campaigns for a user
+router.get('/', auth, campaignController.getCampaigns);
+
+// Get a specific campaign
+router.get('/:id', auth, campaignController.getCampaign);
+
+// Create a new campaign
+router.post('/', auth, campaignController.createCampaign);
+
+// Update a campaign
+router.put('/:id', auth, campaignController.updateCampaign);
+
+// Delete a campaign
+router.delete('/:id', auth, campaignController.deleteCampaign);
+
+// Send a campaign
+router.post('/:id/send', auth, campaignController.sendCampaign);
+
+module.exports = router;
+```
+
+```javascript
+// server/controllers/campaignController.js
+const Campaign = require('../models/Campaign');
+const Contact = require('../models/Contact');
+const sgMail = require('@sendgrid/mail');
+
+// Set SendGrid API key
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+// Get all campaigns for a user
+exports.getCampaigns = async (req, res) => {
+  try {
+    const campaigns = await Campaign.find({ user: req.user.id })
+      .sort({ date: -1 })
+      .populate('recipients', 'name email');
+    
+    res.json(campaigns);
+  } catch (error) {
+    console.error('Error in getCampaigns:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get a specific campaign
+exports.getCampaign = async (req, res) => {
+  try {
+    const campaign = await Campaign.findById(req.params.id)
+      .populate('recipients', 'name email');
+    
+    if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
+    
+    // Check ownership
+    if (campaign.user.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
+    
+    res.json(campaign);
+  } catch (error) {
+    console.error('Error in getCampaign:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Create a new campaign
+exports.createCampaign = async (req, res) => {
+  try {
+    const { name, subject, content, recipients, tags, scheduledDate } = req.body;
+
+    // Create new campaign
+    const newCampaign = new Campaign({
+      user: req.user.id,
+      name,
+      subject,
+      content,
+      recipients,
+      tags,
+      scheduledDate: scheduledDate ? new Date(scheduledDate) : null,
+      status: scheduledDate ? 'scheduled' : 'draft'
+    });
+
+    const campaign = await newCampaign.save();
+    res.json(campaign);
+  } catch (error) {
+    console.error('Error in createCampaign:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Update a campaign
+exports.updateCampaign = async (req, res) => {
+  try {
+    const { name, subject, content, recipients, tags, scheduledDate, status } = req.body;
+
+    // Find campaign and check ownership
+    let campaign = await Campaign.findById(req.params.id);
+    if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
+    if (campaign.user.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
+
+    // Only allow updating if not sent
+    if (campaign.status === 'sent') {
+      return res.status(400).json({ message: 'Cannot update a sent campaign' });
+    }
+
+    // Build campaign object
+    const campaignFields = {};
+    if (name) campaignFields.name = name;
+    if (subject) campaignFields.subject = subject;
+    if (content) campaignFields.content = content;
+    if (recipients) campaignFields.recipients = recipients;
+    if (tags) campaignFields.tags = tags;
+    if (scheduledDate) campaignFields.scheduledDate = new Date(scheduledDate);
+    if (status) campaignFields.status = status;
+
+    // Update campaign
+    campaign = await Campaign.findByIdAndUpdate(
+      req.params.id,
+      { $set: campaignFields },
+      { new: true }
+    );
+
+    res.json(campaign);
+  } catch (error) {
+    console.error('Error in updateCampaign:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Delete a campaign
+exports.deleteCampaign = async (req, res) => {
+  try {
+    // Find campaign and check ownership
+    const campaign = await Campaign.findById(req.params.id);
+    if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
+    if (campaign.user.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
+
+    // Only allow deleting if not sent
+    if (campaign.status === 'sent') {
+      return res.status(400).json({ message: 'Cannot delete a sent campaign' });
+    }
+
+    // Delete campaign
+    await Campaign.findByIdAndRemove(req.params.id);
+    res.json({ message: 'Campaign removed' });
+  } catch (error) {
+    console.error('Error in deleteCampaign:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Send a campaign
+exports.sendCampaign = async (req, res) => {
+  try {
+    // Find campaign and check ownership
+    const campaign = await Campaign.findById(req.params.id)
+      .populate('recipients', 'name email');
+    
+    if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
+    if (campaign.user.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
+
+    // Only allow sending if draft or scheduled
+    if (campaign.status === 'sent') {
+      return res.status(400).json({ message: 'Campaign already sent' });
+    }
+
+    // Send emails to all recipients using SendGrid
+    const messages = campaign.recipients.map(recipient => {
+      return {
+        to: recipient.email,
+        from: 'your-verified-sender@example.com', // Must be verified in SendGrid
+        subject: campaign.subject,
+        html: campaign.content,
+        trackingSettings: {
+          clickTracking: { enable: true },
+          openTracking: { enable: true }
+        }
+      };
+    });
+
+    try {
+      await sgMail.send(messages);
+      
+      // Update campaign status
+      campaign.status = 'sent';
+      campaign.sentDate = new Date();
+      await campaign.save();
+      
+      res.json({ message: 'Campaign sent successfully', campaign });
+    } catch (error) {
+      console.error('SendGrid error:', error);
+      if (error.response) {
+        console.error('SendGrid error body:', error.response.body);
+      }
+      res.status(500).json({ message: 'Error sending emails' });
+    }
+  } catch (error) {
+    console.error('Error in sendCampaign:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+```
+
+#### Analytics Routes and Controller
+
+```javascript
+// server/routes/analytics.js
+const express = require('express');
+const router = express.Router();
+const analyticsController = require('../controllers/analyticsController');
+const auth = require('../middleware/auth');
+
+// Get campaign analytics
+router.get('/campaigns', auth, analyticsController.getCampaignAnalytics);
+
+// Get overall statistics
+router.get('/overview', auth, analyticsController.getOverviewAnalytics);
+
+module.exports = router;
+```
+
+```javascript
+// server/controllers/analyticsController.js
+const Campaign = require('../models/Campaign');
+const Contact = require('../models/Contact');
+
+// Get campaign analytics
+exports.getCampaignAnalytics = async (req, res) => {
+  try {
+    // Get all sent campaigns for the user
+    const campaigns = await Campaign.find({
+      user: req.user.id,
+      status: 'sent'
+    }).select('name sentDate openCount clickCount recipients');
+
+    // Process data for chart display
+    const campaignData = campaigns.map(campaign => {
+      const totalRecipients = campaign.recipients.length;
+      const openRate = totalRecipients > 0 ? (campaign.openCount / totalRecipients) * 100 : 0;
+      const clickRate = totalRecipients > 0 ? (campaign.clickCount / totalRecipients) * 100 : 0;
+      
+      return {
+        name: campaign.name,
+        sentDate: campaign.sentDate,
+        openRate: parseFloat(openRate.toFixed(2)),
+        clickRate: parseFloat(clickRate.toFixed(2)),
+        totalRecipients
+      };
+    });
+
+    res.json(campaignData);
+  } catch (error) {
+    console.error('Error in getCampaignAnalytics:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get overall statistics
+exports.getOverviewAnalytics = async (req, res) => {
+  try {
+    // Get total contacts
+    const totalContacts = await Contact.countDocuments({ user: req.user.id });
+
+    // Get campaigns statistics
+    const campaigns = await Campaign.find({ user: req.user.id });
+    const totalCampaigns = campaigns.length;
+    const sentCampaigns = campaigns.filter(c => c.status === 'sent').length;
+
+    // Calculate total emails sent
+    let totalEmailsSent = 0;
+    let totalOpens = 0;
+    let totalClicks = 0;
+
+    campaigns.forEach(campaign => {
+      if (campaign.status === 'sent') {
+        totalEmailsSent += campaign.recipients.length;
+        totalOpens += campaign.openCount;
+        totalClicks += campaign.clickCount;
+      }
+    });
+
+    // Calculate average open and click rates
+    const avgOpenRate = totalEmailsSent > 0 ? (totalOpens / totalEmailsSent) * 100 : 0;
+    const avgClickRate = totalEmailsSent > 0 ? (totalClicks / totalEmailsSent) * 100 : 0;
+
+    res.json({
+      totalContacts,
+      totalCampaigns,
+      sentCampaigns,
+      totalEmailsSent,
+      avgOpenRate: parseFloat(avgOpenRate.toFixed(2)),
+      avgClickRate: parseFloat(avgClickRate.toFixed(2))
+    });
+  } catch (error) {
+    console.error('Error in getOverviewAnalytics:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+```
+
+## 4. Frontend Development with React
+
+Now let's move on to the frontend of our application.
+
+### Setup React Router and Context
+
+First, let's set up the main React app structure with routing and context for state management:
+
+```javascript
+// client/src/App.js
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+
+// Context
+import { AuthProvider } from './context/AuthContext';
+
+// Components
+import PrivateRoute from './components/PrivateRoute';
+import Navbar from './components/Navbar';
+
+// Pages
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Contacts from './pages/Contacts';
+import Campaigns from './pages/Campaigns';
+import CampaignForm from './pages/CampaignForm';
+import Analytics from './pages/Analytics';
+
+// Create a theme
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+  },
+});
+
+function App() {
+  return (
+    <AuthProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Router>
+          <Navbar />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <PrivateRoute>
+                  <Dashboard />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/contacts" 
+              element={
+                <PrivateRoute>
+                  <Contacts />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/campaigns" 
+              element={
+                <PrivateRoute>
+                  <Campaigns />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/campaigns/new" 
+              element={
+                <PrivateRoute>
+                  <CampaignForm />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/campaigns/edit/:id" 
+              element={
+                <PrivateRoute>
+                  <CampaignForm />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/analytics" 
+              element={
+                <PrivateRoute>
+                  <Analytics />
+                </PrivateRoute>
+              } 
+            />
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+          </Routes>
+        </Router>
+      </ThemeProvider>
+    </AuthProvider>
+  );
+}
+
+export default App;
+```
+
+### Auth Context
+
+```javascript
+// client/src/context/AuthContext.js
+import React, { createContext, useState, useEffect } from 'react';
+import axios from 'axios';
+
+// Create context
+export const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Check if user is logged in on page load
+  useEffect(() => {
+    const checkLoggedIn = async () => {
+      if (localStorage.getItem('token')) {
+        try {
+          // Set auth token header
+          setAuthToken(localStorage.getItem('token'));
+          
+          // Get user data (you might want to create a specific endpoint for this)
+          const res = await axios.get('/api/auth/user');
+          setUser(res.data);
+          setIsAuthenticated(true);
+        } catch (err) {
+          localStorage.removeItem('token');
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      }
+      setLoading(false);
+    };
+
+    checkLoggedIn();
+  }, []);
+
+  // Set auth token in axios headers
+  const setAuthToken = (token) => {
+    if (token) {
+      axios.defaults.headers.common['x-auth-token'] = token;
+    } else {
+      delete axios.defaults.headers.common['x-auth-token'];
+    }
+  };
+
+  // Register user
+  const register = async (formData) => {
+    try {
+      const res = await axios.post('/api/auth/register', formData);
+      
+      // Set token to local storage
+      localStorage.setItem('token', res.data.token);
+      
+      // Set token to axios headers
+      setAuthToken(res.data.token);
+      
+      // Get user data (You could also return user data from the register endpoint)
+      const userRes = await axios.get('/api/auth/user');
+      
+      setUser(userRes.data);
+      setIsAuthenticated(true);
+      setLoading(false);
+      setError(null);
+      
+      return true;
+    } catch (err) {
+      setError(err.response.data.message);
+      return false;
+    }
+  };
+
+  // Login user
+  const login = async (formData) => {
+    try {
+      const res = await axios.post('/api/auth/login', formData);
+      
+      // Set token to local storage
+      localStorage.setItem('token', res.data.token);
+      
+      // Set token to axios headers
+      setAuthToken(res.data.token);
+      
+      // Get user data (You could also return user data from the login endpoint)
+      const userRes = await axios.get('/api/auth/user');
+      
+      setUser(userRes.data);
+      setIsAuthenticated(true);
+      setLoading(false);
+      setError(null);
+      
+      return true;
+    } catch (err) {
+      setError(err.response.data.message);
+      return false;
+    }
+  };
+
+  // Logout user
+  const logout = () => {
+    // Remove token from local storage
+    localStorage.removeItem('token');
+    
+    // Remove token from axios headers
+    setAuthToken(null);
+    
+    // Reset state
+    setUser(null);
+    setIsAuthenticated(false);
+    setLoading(false);
+  };
+
+  // Clear errors
+  const clearErrors = () => {
+    setError(null);
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        loading,
+        error,
+        register,
+        login,
+        logout,
+        clearErrors
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+```
+
+### PrivateRoute Component
+
+```javascript
+// client/src/components/PrivateRoute.js
+import React,
+Let me continue with our Bulk Email Tool project:
+
+### PrivateRoute Component (continued)
+
+```javascript
+// client/src/components/PrivateRoute.js
+import React, { useContext } from 'react';
+import { Navigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
+
+const PrivateRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useContext(AuthContext);
+
+  if (loading) return <div>Loading...</div>;
+  
+  return isAuthenticated ? children : <Navigate to="/login" />;
+};
+
+export default PrivateRoute;
+```
+
+### Navbar Component
+
+```javascript
+// client/src/components/Navbar.js
+import React, { useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import MenuIcon from '@mui/icons-material/Menu';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import { AuthContext } from '../context/AuthContext';
+
+const Navbar = () => {
+  const { isAuthenticated, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleMenuItemClick = (path) => {
+    handleClose();
+    navigate(path);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  return (
+    <Box sx={{ flexGrow: 1 }}>
+      <AppBar position="static">
+        <Toolbar>
+          {isAuthenticated && (
+            <IconButton
+              size="large"
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+              sx={{ mr: 2 }}
+              onClick={handleMenu}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            <Link to="/" style={{ textDecoration: 'none', color: 'white' }}>
+              Bulk Email Tool
+            </Link>
+          </Typography>
+          
+          {isAuthenticated ? (
+            <Button color="inherit" onClick={handleLogout}>Logout</Button>
+          ) : (
+            <>
+              <Button color="inherit" component={Link} to="/login">Login</Button>
+              <Button color="inherit" component={Link} to="/register">Register</Button>
+            </>
+          )}
+        </Toolbar>
+      </AppBar>
+      
+      {isAuthenticated && (
+        <Menu
+          id="menu-appbar"
+          anchorEl={anchorEl}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+          keepMounted
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+          open={Boolean(anchorEl)}
+          onClose={handleClose}
+        >
+          <MenuItem onClick={() => handleMenuItemClick('/dashboard')}>Dashboard</MenuItem>
+          <MenuItem onClick={() => handleMenuItemClick('/contacts')}>Contacts</MenuItem>
+          <MenuItem onClick={() => handleMenuItemClick('/campaigns')}>Campaigns</MenuItem>
+          <MenuItem onClick={() => handleMenuItemClick('/analytics')}>Analytics</MenuItem>
+        </Menu>
+      )}
+    </Box>
+  );
+};
+
+export default Navbar;
+```
+
+### Login and Register Pages
+
+```javascript
+// client/src/pages/Login.js
+import React, { useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Container, 
+  Paper, 
+  Typography, 
+  TextField, 
+  Button, 
+  Alert,
+  Box 
+} from '@mui/material';
+import { AuthContext } from '../context/AuthContext';
+
+const Login = () => {
+  const { login, isAuthenticated, error, clearErrors } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [formError, setFormError] = useState('');
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+    
+    if (error) {
+      setFormError(error);
+      clearErrors();
+    }
+  }, [isAuthenticated, navigate, error, clearErrors]);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.email || !formData.password) {
+      setFormError('Please enter both email and password');
+      return;
+    }
+    
+    const success = await login(formData);
+    
+    if (success) {
+      navigate('/dashboard');
+    }
+  };
+
+  return (
+    <Container maxWidth="sm" sx={{ mt: 4 }}>
+      <Paper elevation={3} sx={{ p: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom align="center">
+          Login
+        </Typography>
+        
+        {formError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {formError}
+          </Alert>
+        )}
+        
+        <Box component="form" onSubmit={handleSubmit}>
+          <TextField
+            fullWidth
+            label="Email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            margin="normal"
+            required
+          />
+          
+          <TextField
+            fullWidth
+            label="Password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            margin="normal"
+            required
+          />
+          
+          <Button 
+            type="submit" 
+            variant="contained" 
+            color="primary" 
+            fullWidth 
+            sx={{ mt: 3 }}
+          >
+            Login
+          </Button>
+        </Box>
+      </Paper>
+    </Container>
+  );
+};
+
+export default Login;
+```
+
+```javascript
+// client/src/pages/Register.js
+import React, { useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Container, 
+  Paper, 
+  Typography, 
+  TextField, 
+  Button, 
+  Alert,
+  Box 
+} from '@mui/material';
+import { AuthContext } from '../context/AuthContext';
+
+const Register = () => {
+  const { register, isAuthenticated, error, clearErrors } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [formError, setFormError] = useState('');
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+    
+    if (error) {
+      setFormError(error);
+      clearErrors();
+    }
+  }, [isAuthenticated, navigate, error, clearErrors]);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+      setFormError('Please fill in all fields');
+      return;
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      setFormError('Passwords do not match');
+      return;
+    }
+    
+    if (formData.password.length < 6) {
+      setFormError('Password must be at least 6 characters');
+      return;
+    }
+    
+    const success = await register({
+      name: formData.name,
+      email: formData.email,
+      password: formData.password
+    });
+    
+    if (success) {
+      navigate('/dashboard');
+    }
+  };
+
+  return (
+    <Container maxWidth="sm" sx={{ mt: 4 }}>
+      <Paper elevation={3} sx={{ p: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom align="center">
+          Register
+        </Typography>
+        
+        {formError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {formError}
+          </Alert>
+        )}
+        
+        <Box component="form" onSubmit={handleSubmit}>
+          <TextField
+            fullWidth
+            label="Name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            margin="normal"
+            required
+          />
+          
+          <TextField
+            fullWidth
+            label="Email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            margin="normal"
+            required
+          />
+          
+          <TextField
+            fullWidth
+            label="Password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            margin="normal"
+            required
+          />
+          
+          <TextField
+            fullWidth
+            label="Confirm Password"
+            name="confirmPassword"
+            type="password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            margin="normal"
+            required
+          />
+          
+          <Button 
+            type="submit" 
+            variant="contained" 
+            color="primary" 
+            fullWidth 
+            sx={{ mt: 3 }}
+          >
+            Register
+          </Button>
+        </Box>
+      </Paper>
+    </Container>
+  );
+};
+
+export default Register;
+```
+
+### Dashboard Page
+
+```javascript
+// client/src/pages/Dashboard.js
+import React, { useEffect, useState, useContext } from 'react';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { 
+  Container, 
+  Grid, 
+  Paper, 
+  Typography, 
+  Button,
+  Box,
+  CircularProgress
+} from '@mui/material';
+import { 
+  Email as EmailIcon, 
+  Person as PersonIcon, 
+  Campaign as CampaignIcon,
+  Send as SendIcon
+} from '@mui/icons-material';
+import { AuthContext } from '../context/AuthContext';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Bar, Line } from 'react-chartjs-2';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+const Dashboard = () => {
+  const { isAuthenticated } = useContext(AuthContext);
+  const [stats, setStats] = useState(null);
+  const [campaigns, setCampaigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch overview statistics
+        const statsRes = await axios.get('/api/analytics/overview');
+        setStats(statsRes.data);
+        
+        // Fetch recent campaigns for the chart
+        const campaignsRes = await axios.get('/api/analytics/campaigns');
+        setCampaigns(campaignsRes.data);
+        
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to load dashboard data');
+        setLoading(false);
+      }
+    };
+
+    if (isAuthenticated) {
+      fetchData();
+    }
+  }, [isAuthenticated]);
+
+  // Prepare chart data
+  const prepareChartData = () => {
+    // Sort campaigns by date
+    const sortedCampaigns = [...campaigns].sort((a, b) => 
+      new Date(a.sentDate) - new Date(b.sentDate)
+    ).slice(-5); // Get last 5 campaigns
+    
+    return {
+      labels: sortedCampaigns.map(c => c.name),
+      datasets: [
+        {
+          label: 'Open Rate (%)',
+          data: sortedCampaigns.map(c => c.openRate),
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1,
+        },
+        {
+          label: 'Click Rate (%)',
+          data: sortedCampaigns.map(c => c.clickRate),
+          backgroundColor: 'rgba(153, 102, 255, 0.2)',
+          borderColor: 'rgba(153, 102, 255, 1)',
+          borderWidth: 1,
+        },
+      ],
+    };
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        Dashboard
+      </Typography>
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      
+      {/* Stats Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {/* Contacts Card */}
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper
+            sx={{
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              height: 140,
+            }}
+          >
+            <PersonIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography component="h2" variant="h5" color="primary" gutterBottom>
+              {stats?.totalContacts || 0}
+            </Typography>
+            <Typography variant="body1">Total Contacts</Typography>
+          </Paper>
+        </Grid>
+        
+        {/* Campaigns Card */}
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper
+            sx={{
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              height: 140,
+            }}
+          >
+            <CampaignIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography component="h2" variant="h5" color="primary" gutterBottom>
+              {stats?.totalCampaigns || 0}
+            </Typography>
+            <Typography variant="body1">Total Campaigns</Typography>
+          </Paper>
+        </Grid>
+        
+        {/* Sent Emails Card */}
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper
+            sx={{
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              height: 140,
+            }}
+          >
+            <SendIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography component="h2" variant="h5" color="primary" gutterBottom>
+              {stats?.totalEmailsSent || 0}
+            </Typography>
+            <Typography variant="body1">Emails Sent</Typography>
+          </Paper>
+        </Grid>
+        
+        {/* Avg Open Rate Card */}
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper
+            sx={{
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              height: 140,
+            }}
+          >
+            <EmailIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography component="h2" variant="h5" color="primary" gutterBottom>
+              {stats?.avgOpenRate || 0}%
+            </Typography>
+            <Typography variant="body1">Avg. Open Rate</Typography>
+          </Paper>
+        </Grid>
+      </Grid>
+      
+      {/* Campaign Performance Chart */}
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Recent Campaign Performance
+            </Typography>
+            {campaigns.length > 0 ? (
+              <Box sx={{ height: 300 }}>
+                <Bar 
+                  data={prepareChartData()} 
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                          display: true,
+                          text: 'Rate (%)'
+                        }
+                      }
+                    }
+                  }}
+                />
+              </Box>
+            ) : (
+              <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 5 }}>
+                No campaign data available. Start by creating your first campaign!
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+      
+      {/* Action Buttons */}
+      <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 2 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<PersonIcon />}
+          component={Link}
+          to="/contacts"
+        >
+          Manage Contacts
+        </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          startIcon={<CampaignIcon />}
+          component={Link}
+          to="/campaigns/new"
+        >
+          Create Campaign
+        </Button>
+      </Box>
+    </Container>
+  );
+};
+
+export default Dashboard;
+```
+
+### Contacts Page
+
+```javascript
+// client/src/pages/Contacts.js
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import {
+  Container,
+  Typography,
+  Paper,
+  TextField,
+  Button,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Box,
+  Chip,
+  CircularProgress,
+  Alert,
+  InputAdornment
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Search as SearchIcon
+} from '@mui/icons-material';
+
+const Contacts = () => {
+  const [contacts, setContacts] = useState([]);
+  const [filteredContacts, setFilteredContacts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [search, setSearch] = useState('');
+  const [openDialog, setOpenDialog] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentContact, setCurrentContact] = useState({
+    id: '',
+    name: '',
+    email: '',
+    tags: ''
+  });
+
+  // Fetch contacts on component mount
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+
+  // Filter contacts based on search
+  useEffect(() => {
+    if (search.trim() === '') {
+      setFilteredContacts(contacts);
+    } else {
+      const searchLower = search.toLowerCase();
+      setFilteredContacts(contacts.filter(contact => 
+        contact.name.toLowerCase().includes(searchLower) ||
+        contact.email.toLowerCase().includes(searchLower) ||
+        (contact.tags && contact.tags.some(tag => 
+          tag.toLowerCase().includes(searchLower)
+        ))
+      ));
+    }
+  }, [search, contacts]);
+
+  const fetchContacts = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get('/api/contacts');
+      setContacts(res.data);
+      setFilteredContacts(res.data);
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to fetch contacts');
+      setLoading(false);
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+  };
+
+  const handleOpenDialog = (contact = null) => {
+    if (contact) {
+      setIsEditing(true);
+      setCurrentContact({
+        id: contact._id,
+        name: contact.name,
+        email: contact.email,
+        tags: contact.tags ? contact.tags.join(', ') : ''
+      });
+    } else {
+      setIsEditing(false);
+      setCurrentContact({
+        id: '',
+        name: '',
+        email: '',
+        tags: ''
+      });
+    }
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
+  const handleInputChange = (e) => {
+    setCurrentContact({
+      ...currentContact,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      // Parse tags - convert comma-separated string to array
+      const tagsArray = currentContact.tags
+        ? currentContact.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== '')
+        : [];
+
+      const contactData = {
+        name: currentContact.name,
+        email: currentContact.email,
+        tags: tagsArray
+      };
+
+      if (isEditing) {
+        // Update existing contact
+        await axios.put(`/api/contacts/${currentContact.id}`, contactData);
+      } else {
+        // Add new contact
+        await axios.post('/api/contacts', contactData);
+      }
+
+      // Refresh contacts list
+      fetchContacts();
+      handleCloseDialog();
+    } catch (err) {
+      setError(isEditing ? 'Failed to update contact' : 'Failed to add contact');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this contact?')) {
+      try {
+        await axios.delete(`/api/contacts/${id}`);
+        // Refresh contacts list
+        fetchContacts();
+      } catch (err) {
+        setError('Failed to delete contact');
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        Contacts
+      </Typography>
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      
+      {/* Search and Add Contact */}
+      <Box sx={{ display: 'flex', mb: 3, gap: 2 }}>
+        <TextField
+          fullWidth
+          placeholder="Search contacts..."
+          value={search}
+          onChange={handleSearchChange}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog()}
+        >
+          Add Contact
+        </Button>
+      </Box>
+      
+      {/* Contacts Table */}
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Tags</TableCell>
+              <TableCell align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredContacts.length > 0 ? (
+              filteredContacts.map((contact) => (
+                <TableRow key={contact._id}>
+                  <TableCell>{contact.name}</TableCell>
+                  <TableCell>{contact.email}</TableCell>
+                  <TableCell>
+                    {contact.tags && contact.tags.map((tag) => (
+                      <Chip
+                        key={tag}
+                        label={tag}
+                        size="small"
+                        sx={{ mr: 0.5, mb: 0.5 }}
+                      />
+                    ))}
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      color="primary"
+                      onClick={() => handleOpenDialog(contact)}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      color="error"
+                      onClick={() => handleDelete(contact._id)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} align="center">
+                  No contacts found. Add your first contact!
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      
+      {/* Add/Edit Contact Dialog */}
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {isEditing ? 'Edit Contact' : 'Add Contact'}
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            name="name"
+            label="Name"
+            type="text"
+            fullWidth
+            value={currentContact.name}
+            onChange={handleInputChange}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            name="email"
+            label="Email"
+            type="email"
+            fullWidth
+            value={currentContact.email}
+            onChange={handleInputChange}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            name="tags"
+            label="Tags (comma separated)"
+            type="text"
+            fullWidth
+            value={currentContact.tags}
+            onChange={handleInputChange}
+            helperText="Example: client, newsletter, vip"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained" color="primary">
+            {isEditing ? 'Update' : 'Add'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
+  );
+};
+
+export default Contacts;
+```
+
+### Campaigns Page
+
+```javascript
+// client/src/pages/Campaigns.js
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+import {
+  Container,
+  Typography,
+  Paper,
+  Button,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Box,
+  Chip,
+  CircularProgress,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Send as SendIcon,
+  Visibility as ViewIcon
+} from '@mui/icons-material';
+
+const Campaigns = () => {
+  const [campaigns, setCampaigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [currentCampaign, setCurrentCampaign] = useState(null);
+  const [confirmText, setConfirmText] = useState('');
+
+  // Fetch campaigns on component mount
+  useEffect(() => {
+    fetchCampaigns();
+  }, []);
+
+  const fetchCampaigns = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get('/api/campaigns');
+      setCampaigns(res.data);
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to fetch campaigns');
+      setLoading(false);
+    }
+  };
+
+  const handleSendDialog = (campaign) => {
+    setCurrentCampaign(campaign);
+    setSendDialogOpen(true);
+  };
+
+  const handleSendCampaign = async () => {
+    if (confirmText !== 'SEND') {
+      return;
+    }
+
+    try {
+      await axios.post(`/api/campaigns/${currentCampaign._id}/send`);
+      fetchCampaigns();
+      setSendDialogOpen(false);
+      setConfirmText('');
+    } catch (err) {
+      setError('Failed to send campaign');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this campaign?')) {
+      try {
+        await axios.delete(`/api/campaigns/${id}`);
+        fetchCampaigns();
+      } catch (err) {
+        setError('Failed to delete campaign');
+      }
+    }
+  };
+
+  // Format date to readable string
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        Campaigns
+      </Typography>
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      
+      {/* Create Campaign Button */}
+      <Box sx={{ mb: 3 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          component={Link}
+          to="/campaigns/new"
+        >
+          Create Campaign
+        </Button>
+      </Box>
+      
+      {/* Campaigns Table */}
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Subject</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Recipients</TableCell>
+              <TableCell>Scheduled/Sent Date</TableCell>
+              <TableCell align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {campaigns.length > 0 ? (
+              campaigns.map((campaign) => (
+                <TableRow key={campaign._id}>
+                                           Let me continue with our Bulk Email Tool project, focusing on completing the Campaigns page and the rest of the frontend components:
+
+### Campaigns Page (continued)
+
+```javascript
+// client/src/pages/Campaigns.js (continued)
+                <TableRow key={campaign._id}>
+                  <TableCell>{campaign.name}</TableCell>
+                  <TableCell>{campaign.subject}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
+                      color={
+                        campaign.status === 'sent' ? 'success' :
+                        campaign.status === 'scheduled' ? 'primary' :
+                        'default'
+                      }
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>{campaign.recipients ? campaign.recipients.length : 0}</TableCell>
+                  <TableCell>
+                    {campaign.status === 'sent' 
+                      ? formatDate(campaign.sentDate)
+                      : campaign.status === 'scheduled'
+                        ? formatDate(campaign.scheduledDate)
+                        : 'Not scheduled'
+                    }
+                  </TableCell>
+                  <TableCell align="right">
+                    {campaign.status === 'draft' && (
+                      <>
+                        <IconButton
+                          color="primary"
+                          component={Link}
+                          to={`/campaigns/edit/${campaign._id}`}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          color="success"
+                          onClick={() => handleSendDialog(campaign)}
+                        >
+                          <SendIcon />
+                        </IconButton>
+                      </>
+                    )}
+                    <IconButton
+                      color="info"
+                      component={Link}
+                      to={`/campaigns/${campaign._id}`}
+                    >
+                      <ViewIcon />
+                    </IconButton>
+                    {campaign.status !== 'sent' && (
+                      <IconButton
+                        color="error"
+                        onClick={() => handleDelete(campaign._id)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} align="center">
+                  No campaigns found. Create your first campaign!
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      
+      {/* Send Campaign Confirmation Dialog */}
+      <Dialog open={sendDialogOpen} onClose={() => setSendDialogOpen(false)}>
+        <DialogTitle>Send Campaign</DialogTitle>
+        <DialogContent>
+          <Typography gutterBottom>
+            Are you sure you want to send the campaign "{currentCampaign?.name}" to {currentCampaign?.recipients?.length || 0} recipients?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            This action cannot be undone. To confirm, type "SEND" in the box below.
+          </Typography>
+          <TextField
+            autoFocus
+            fullWidth
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            margin="dense"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSendDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleSendCampaign}
+            color="error"
+            variant="contained"
+            disabled={confirmText !== 'SEND'}
+          >
+            Send Now
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
+  );
+};
+
+export default Campaigns;
+```
+
+### Campaign Form Page
+
+Now, let's create the page for creating and editing campaigns:
+
+```javascript
+// client/src/pages/CampaignForm.js
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import {
+  Container,
+  Typography,
+  Paper,
+  TextField,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Box,
+  Chip,
+  OutlinedInput,
+  Checkbox,
+  ListItemText,
+  CircularProgress,
+  Alert,
+  Divider
+} from '@mui/material';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { Save as SaveIcon, Send as SendIcon } from '@mui/icons-material';
+
+const CampaignForm = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEditing = Boolean(id);
+  
+  const [campaign, setCampaign] = useState({
+    name: '',
+    subject: '',
+    content: '',
+    recipients: [],
+    scheduledDate: null
+  });
+  
+  const [contacts, setContacts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [saveStatus, setSaveStatus] = useState(null);
+
+  // Fetch contacts and campaign (if editing) on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch contacts
+        const contactsRes = await axios.get('/api/contacts');
+        setContacts(contactsRes.data);
+        
+        // If editing, fetch campaign
+        if (isEditing) {
+          const campaignRes = await axios.get(`/api/campaigns/${id}`);
+          const { name, subject, content, recipients, scheduledDate } = campaignRes.data;
+          
+          setCampaign({
+            name,
+            subject,
+            content,
+            recipients: recipients.map(r => r._id),
+            scheduledDate: scheduledDate ? new Date(scheduledDate) : null
+          });
+        }
+        
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to load data');
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [isEditing, id]);
+
+  const handleInputChange = (e) => {
+    setCampaign({
+      ...campaign,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleDateChange = (newDate) => {
+    setCampaign({
+      ...campaign,
+      scheduledDate: newDate
+    });
+  };
+
+  const handleRecipientsChange = (event) => {
+    setCampaign({
+      ...campaign,
+      recipients: event.target.value
+    });
+  };
+
+  const handleSubmit = async (sendNow = false) => {
+    try {
+      const campaignData = {
+        name: campaign.name,
+        subject: campaign.subject,
+        content: campaign.content,
+        recipients: campaign.recipients,
+        scheduledDate: campaign.scheduledDate
+      };
+      
+      if (isEditing) {
+        // Update existing campaign
+        await axios.put(`/api/campaigns/${id}`, campaignData);
+        
+        // If sending now, make the send request
+        if (sendNow) {
+          await axios.post(`/api/campaigns/${id}/send`);
+        }
+      } else {
+        // Create new campaign
+        const res = await axios.post('/api/campaigns', campaignData);
+        
+        // If sending now, make the send request
+        if (sendNow) {
+          await axios.post(`/api/campaigns/${res.data._id}/send`);
+        }
+      }
+      
+      // Set success message and redirect after a delay
+      setSaveStatus({
+        type: 'success',
+        message: `Campaign ${sendNow ? 'sent' : 'saved'} successfully`
+      });
+      
+      setTimeout(() => {
+        navigate('/campaigns');
+      }, 2000);
+    } catch (err) {
+      setSaveStatus({
+        type: 'error',
+        message: `Failed to ${sendNow ? 'send' : 'save'} campaign`
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
+    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        {isEditing ? 'Edit Campaign' : 'Create Campaign'}
+      </Typography>
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      
+      {saveStatus && (
+        <Alert severity={saveStatus.type} sx={{ mb: 2 }}>
+          {saveStatus.message}
+        </Alert>
+      )}
+      
+      <Paper sx={{ p: 3 }}>
+        <Box component="form">
+          {/* Campaign Details */}
+          <Typography variant="h6" gutterBottom>
+            Campaign Details
+          </Typography>
+          
+          <TextField
+            fullWidth
+            label="Campaign Name"
+            name="name"
+            value={campaign.name}
+            onChange={handleInputChange}
+            margin="normal"
+            required
+          />
+          
+          <TextField
+            fullWidth
+            label="Email Subject"
+            name="subject"
+            value={campaign.subject}
+            onChange={handleInputChange}
+            margin="normal"
+            required
+          />
+          
+          <Divider sx={{ my: 3 }} />
+          
+          {/* Recipients */}
+          <Typography variant="h6" gutterBottom>
+            Recipients
+          </Typography>
+          
+          <FormControl fullWidth margin="normal" required>
+            <InputLabel id="recipients-label">Select Recipients</InputLabel>
+            <Select
+              labelId="recipients-label"
+              multiple
+              value={campaign.recipients}
+              onChange={handleRecipientsChange}
+              input={<OutlinedInput label="Select Recipients" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((value) => {
+                    const contact = contacts.find(c => c._id === value);
+                    return (
+                      <Chip key={value} label={contact ? contact.name : value} />
+                    );
+                  })}
+                </Box>
+              )}
+            >
+              {contacts.map((contact) => (
+                <MenuItem key={contact._id} value={contact._id}>
+                  <Checkbox checked={campaign.recipients.indexOf(contact._id) > -1} />
+                  <ListItemText primary={contact.name} secondary={contact.email} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          
+          {/* Schedule */}
+          <Box sx={{ mt: 2 }}>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DateTimePicker
+                label="Schedule Send (Optional)"
+                value={campaign.scheduledDate}
+                onChange={handleDateChange}
+                renderInput={(params) => <TextField {...params} fullWidth />}
+              />
+            </LocalizationProvider>
+          </Box>
+          
+          <Divider sx={{ my: 3 }} />
+          
+          {/* Email Content */}
+          <Typography variant="h6" gutterBottom>
+            Email Content
+          </Typography>
+          
+          <TextField
+            fullWidth
+            label="Email Content"
+            name="content"
+            value={campaign.content}
+            onChange={handleInputChange}
+            margin="normal"
+            required
+            multiline
+            rows={10}
+            placeholder="Write your email content here... HTML is supported."
+          />
+          
+          {/* Action Buttons */}
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/campaigns')}
+            >
+              Cancel
+            </Button>
+            
+            <Box>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<SaveIcon />}
+                onClick={() => handleSubmit(false)}
+                sx={{ mr: 1 }}
+              >
+                Save Draft
+              </Button>
+              
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<SendIcon />}
+                onClick={() => handleSubmit(true)}
+                disabled={campaign.recipients.length === 0}
+              >
+                Send Now
+              </Button>
+            </Box>
+          </Box>
+        </Box>
+      </Paper>
+    </Container>
+  );
+};
+
+export default CampaignForm;
+```
+
+### Analytics Page
+
+Let's create an in-depth analytics page to visualize campaign performance:
+
+```javascript
+// client/src/pages/Analytics.js
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import {
+  Container,
+  Typography,
+  Paper,
+  Grid,
+  Box,
+  CircularProgress,
+  Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
+} from '@mui/material';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+import { Line, Bar, Pie } from 'react-chartjs-2';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+const Analytics = () => {
+  const [campaignData, setCampaignData] = useState([]);
+  const [overview, setOverview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedMetric, setSelectedMetric] = useState('openRate');
+  
+  // Fetch analytics data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch campaign analytics
+        const campaignsRes = await axios.get('/api/analytics/campaigns');
+        setCampaignData(campaignsRes.data);
+        
+        // Fetch overview statistics
+        const overviewRes = await axios.get('/api/analytics/overview');
+        setOverview(overviewRes.data);
+        
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to load analytics data');
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Prepare line chart data
+  const prepareLineChartData = () => {
+    // Sort campaigns by date
+    const sortedCampaigns = [...campaignData].sort((a, b) => 
+      new Date(a.sentDate) - new Date(b.sentDate)
+    );
+    
+    return {
+      labels: sortedCampaigns.map(c => c.name),
+      datasets: [
+        {
+          label: selectedMetric === 'openRate' ? 'Open Rate (%)' : 'Click Rate (%)',
+          data: sortedCampaigns.map(c => 
+            selectedMetric === 'openRate' ? c.openRate : c.clickRate
+          ),
+          borderColor: selectedMetric === 'openRate' 
+            ? 'rgba(75, 192, 192, 1)' 
+            : 'rgba(153, 102, 255, 1)',
+          backgroundColor: selectedMetric === 'openRate'
+            ? 'rgba(75, 192, 192, 0.2)'
+            : 'rgba(153, 102, 255, 0.2)',
+          tension: 0.1
+        }
+      ]
+    };
+  };
+
+  // Prepare bar chart data
+  const prepareBarChartData = () => {
+    // Sort campaigns by performance (descending)
+    const sortedCampaigns = [...campaignData].sort((a, b) => 
+      b[selectedMetric] - a[selectedMetric]
+    ).slice(0, 5); // Top 5 campaigns
+    
+    return {
+      labels: sortedCampaigns.map(c => c.name),
+      datasets: [
+        {
+          label: selectedMetric === 'openRate' ? 'Open Rate (%)' : 'Click Rate (%)',
+          data: sortedCampaigns.map(c => 
+            selectedMetric === 'openRate' ? c.openRate : c.clickRate
+          ),
+          backgroundColor: selectedMetric === 'openRate'
+            ? 'rgba(75, 192, 192, 0.8)'
+            : 'rgba(153, 102, 255, 0.8)',
+        }
+      ]
+    };
+  };
+
+  // Prepare pie chart data
+  const preparePieChartData = () => {
+    if (!overview) return { labels: [], datasets: [] };
+    
+    return {
+      labels: ['Opened', 'Not Opened'],
+      datasets: [
+        {
+          data: [
+            overview.avgOpenRate,
+            100 - overview.avgOpenRate
+          ],
+          backgroundColor: [
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(211, 211, 211, 0.8)'
+          ],
+          borderColor: [
+            'rgba(75, 192, 192, 1)',
+            'rgba(211, 211, 211, 1)'
+          ],
+          borderWidth: 1,
+        },
+      ],
+    };
+  };
+
+  const handleMetricChange = (event) => {
+    setSelectedMetric(event.target.value);
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        Email Campaign Analytics
+      </Typography>
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      
+      {/* Overview Stats */}
+      {overview && (
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper sx={{ p: 2, textAlign: 'center', height: '100%' }}>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                Total Campaigns
+              </Typography>
+              <Typography variant="h3" component="div" color="primary">
+                {overview.totalCampaigns}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {overview.sentCampaigns} sent
+              </Typography>
+            </Paper>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper sx={{ p: 2, textAlign: 'center', height: '100%' }}>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                Total Contacts
+              </Typography>
+              <Typography variant="h3" component="div" color="primary">
+                {overview.totalContacts}
+              </Typography>
+            </Paper>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper sx={{ p: 2, textAlign: 'center', height: '100%' }}>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                Avg. Open Rate
+              </Typography>
+              <Typography variant="h3" component="div" color="primary">
+                {overview.avgOpenRate}%
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Industry avg: 21.33%
+              </Typography>
+            </Paper>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper sx={{ p: 2, textAlign: 'center', height: '100%' }}>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                Avg. Click Rate
+              </Typography>
+              <Typography variant="h3" component="div" color="primary">
+                {overview.avgClickRate}%
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Industry avg: 2.62%
+              </Typography>
+            </Paper>
+          </Grid>
+        </Grid>
+      )}
+      
+      {/* Metric Selector */}
+      <Box sx={{ mb: 3 }}>
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel id="metric-select-label">Metric</InputLabel>
+          <Select
+            labelId="metric-select-label"
+            value={selectedMetric}
+            label="Metric"
+            onChange={handleMetricChange}
+          >
+            <MenuItem value="openRate">Open Rate</MenuItem>
+            <MenuItem value="clickRate">Click Rate</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+      
+      {/* Charts */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {/* Trend Chart */}
+        <Grid item xs={12} md={8}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Performance Trend
+            </Typography>
+            {campaignData.length > 0 ? (
+              <Box sx={{ height: 300 }}>
+                <Line 
+                  data={prepareLineChartData()} 
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                          display: true,
+                          text: 'Rate (%)'
+                        }
+                      }
+                    }
+                  }}
+                />
+              </Box>
+            ) : (
+              <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 5 }}>
+                No campaign data available
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
+        
+        {/* Overview Pie Chart */}
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Average Open Rate
+            </Typography>
+            {overview ? (
+              <Box sx={{ height: 300, display: 'flex', justifyContent: 'center' }}>
+                <Pie 
+                  data={preparePieChartData()} 
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false
+                  }}
+                />
+              </Box>
+            ) : (
+              <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 5 }}>
+                No data available
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
+        
+        {/* Top Performing Campaigns */}
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Top Performing Campaigns
+            </Typography>
+            {campaignData.length > 0 ? (
+              <Box sx={{ height: 300 }}>
+                <Bar 
+                  data={prepareBarChartData()} 
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                          display: true,
+                          text: 'Rate (%)'
+                        }
+                      }
+                    },
+                    indexAxis: 'y'
+                  }}
+                />
+              </Box>
+            ) : (
+              <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 5 }}>
+                No campaign data available
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+      
+      {/* Campaigns Table */}
+      <Paper sx={{ p: 2 }}>
+        <Typography variant="h6" gutterBottom>
+          Campaign Details
+        </Typography>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Campaign Name</TableCell>
+                <TableCell>Sent Date</TableCell>
+                <TableCell>Recipients</TableCell>
+                <TableCell>Open Rate</TableCell>
+                <TableCell>Click Rate</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {campaignData.length > 0 ? (
+                campaignData.map((campaign) => (
+                  <TableRow key={campaign.name}>
+                    <TableCell>{campaign.name}</TableCell>
+                    <TableCell>{formatDate(campaign.sentDate)}</TableCell>
+                    <TableCell>{campaign.totalRecipients}</TableCell>
+                    <TableCell>{campaign.openRate}%</TableCell>
+                    <TableCell>{campaign.clickRate}%</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    No campaign data available
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+    </Container>
+  );
+};
+
+export default Analytics;
+```
+
+## 5. MongoDB Atlas Integration
+
+Now, let's set up MongoDB Atlas for our database:
+
+### Setting Up MongoDB Atlas
+
+1. Create a free MongoDB Atlas account at https://www.mongodb.com/cloud/atlas
+2. Create a new cluster (the free tier is sufficient)
+3. Set up database access (create a user with password)
+4. Set up network access (allow connections from anywhere for development)
+5. Get your connection string
+
+Update your server's .env file with the MongoDB connection string:
+
+```
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/bulk-email-tool
+```
+
+## 6. SendGrid Integration
+
+For email sending capabilities, we'll use SendGrid's free tier:
+
+### Setting Up SendGrid
+
+1. Create a free SendGrid account at https://sendgrid.com/
+2. Create an API key in the SendGrid dashboard
+3. Verify a sender email address
+
+Update your server's .env file with the SendGrid API key:
+
+```
+SENDGRID_API_KEY=your_sendgrid_api_key
+```
+
+## 7. Testing and Deployment
+
+### Testing
+
+Let's create some simple test data to ensure our application works correctly:
+
+1. Register a user
+2. Add a few contacts
+3. Create and send a test campaign to yourself
+4. Check the analytics
+
+### Deployment Options
+
+For deployment, you have several options:
+
+1. **Heroku**:
+   - Create a new app in the Heroku dashboard
+   - Connect your GitHub repository
+   - Set environment variables in the Heroku dashboard
+   - Deploy your application
+
+2. **Vercel/Netlify for Frontend + Render for Backend**:
+   - Deploy the React frontend to Vercel or Netlify
+   - Deploy the Node.js backend to Render
+   - Set up environment variables in both platforms
+
+3. **AWS / Google Cloud / Azure**:
+   - More complex but offers more control and scalability
+   - Can use Docker containers for easier deployment
+
+## 8. Future Improvements
+
+As your project grows, consider these enhancements:
+
+1. **Email Templates**: Add pre-designed templates for different types of campaigns
+2. **A/B Testing**: Allow testing different subject lines or content
+3. **Advanced Analytics**: Add more detailed metrics and reporting
+4. **Automation**: Set up drip campaigns and automated sequences
+5. **User Roles**: Add team collaboration features
+6. **Integration with CRMs**: Connect with popular CRM platforms
+
+## Summary
+
+We've built a complete Bulk Email Tool using the MERN stack with MongoDB Atlas for data storage and SendGrid for email sending. The application includes:
+
+1. User authentication
+2. Contact management
+3. Email campaign creation and sending
+4. Analytics dashboard with charts
+5. Responsive design with Material UI
+
+This project provides a solid foundation that can be extended with more features as needed. The code is structured in a modular way, making it easy to add functionality or modify existing features.
+
+The application follows best practices for MERN stack development:
+- Separation of concerns between frontend and backend
+- RESTful API design
+- JWT-based authentication
+- Proper error handling
+- Responsive UI with Material UI
+- Data visualization with Chart.js
+
+By following this guide, you should now have a functioning bulk email tool that can be used for sending marketing campaigns, newsletters, or other mass communications while tracking engagement metrics.
